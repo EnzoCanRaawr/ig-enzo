@@ -123,7 +123,7 @@ const Index = () => {
           >
             {/* Name positioned top-right */}
             <div className="flex flex-col items-end text-right mt-24 mr-4 md:mr-12">
-              <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-display font-bold text-white tracking-[0.3em] uppercase mb-3">
+              <h1 className="text-lg sm:text-xl md:text-2xl font-display font-normal text-white tracking-[0.45em] uppercase mb-3">
                 Enzo Gimena
               </h1>
               <p className="text-xs sm:text-sm text-white/70 tracking-[0.25em] uppercase italic">
