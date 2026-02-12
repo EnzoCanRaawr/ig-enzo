@@ -1,40 +1,26 @@
 import { motion, useInView } from "framer-motion";
-import { useRef } from "react";
-import { ExternalLink } from "lucide-react";
+import { useRef, useState, useEffect } from "react";
+import { ExternalLink, Briefcase } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
-const projects = [
-  {
-    number: "01",
-    title: "The Rise",
-    description: "About a band who wants to change the world through music",
-    tags: ["React", "TypeScript", "Tailwind"],
-    link: "https://enzotherise.netlify.app/",
-  },
-  {
-    number: "02",
-    title: "Calculator Relapse",
-    description: "Can be use to prank your friends",
-    tags: ["JavaScript", "Canvas", "HTML/CSS"],
-    link: "https://calculcalcu.gt.tc/",
-  },
-  {
-    number: "03",
-    title: "Friendster Portfolio",
-    description: "A replica of the classic Friendster Profile Page",
-    tags: ["React", "Firebase", "HTML/CSS"],
-    link: "https://enzooo.rf.gd/?i=1",
-  },
-];
+type WorksProject = {
+  id: string;
+  title: string;
+  description: string;
+  tags: string[];
+  link: string;
+  display_order: number;
+};
 
-const ProjectCard = ({ project, index }: { project: typeof projects[0]; index: number }) => {
+const ProjectCard = ({ project, index }: { project: WorksProject; index: number }) => {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-50px" });
 
   return (
     <motion.a
       ref={ref}
-      href={project.link}
-      target="_blank"
+      href={project.link || undefined}
+      target={project.link ? "_blank" : undefined}
       rel="noopener noreferrer"
       className="group block border-b border-white/10 py-10 md:py-14"
       initial={{ opacity: 0, y: 40 }}
@@ -43,7 +29,9 @@ const ProjectCard = ({ project, index }: { project: typeof projects[0]; index: n
     >
       <div className="flex items-start md:items-center justify-between gap-6 flex-col md:flex-row">
         <div className="flex items-baseline gap-6 md:gap-10">
-          <span className="text-sm text-white/30 tracking-wider font-mono">{project.number}</span>
+          <span className="text-sm text-white/30 tracking-wider font-mono">
+            {String(index + 1).padStart(2, "0")}
+          </span>
           <div>
             <h3 className="text-2xl md:text-3xl lg:text-4xl font-display font-bold text-white group-hover:text-white/70 transition-colors">
               {project.title}
@@ -54,13 +42,15 @@ const ProjectCard = ({ project, index }: { project: typeof projects[0]; index: n
 
         <div className="flex items-center gap-6">
           <div className="hidden md:flex gap-2">
-            {project.tags.map((tag) => (
+            {project.tags?.map((tag) => (
               <span key={tag} className="text-xs text-white/30 tracking-wider uppercase">
                 {tag}
               </span>
             ))}
           </div>
-          <ExternalLink className="w-4 h-4 text-white/30 group-hover:text-white transition-colors" />
+          {project.link && (
+            <ExternalLink className="w-4 h-4 text-white/30 group-hover:text-white transition-colors" />
+          )}
         </div>
       </div>
     </motion.a>
@@ -70,6 +60,19 @@ const ProjectCard = ({ project, index }: { project: typeof projects[0]; index: n
 const Works = () => {
   const headerRef = useRef(null);
   const isHeaderInView = useInView(headerRef, { once: true, margin: "-100px" });
+  const [projects, setProjects] = useState<WorksProject[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    supabase
+      .from("works_projects")
+      .select("*")
+      .order("display_order")
+      .then(({ data }) => {
+        if (data) setProjects(data as unknown as WorksProject[]);
+        setLoading(false);
+      });
+  }, []);
 
   return (
     <section id="works" className="py-24 lg:py-32 bg-black text-white">
@@ -87,11 +90,22 @@ const Works = () => {
           </h2>
         </motion.div>
 
-        <div className="border-t border-white/10">
-          {projects.map((project, index) => (
-            <ProjectCard key={project.number} project={project} index={index} />
-          ))}
-        </div>
+        {loading ? (
+          <div className="text-center py-16">
+            <p className="text-white/30 text-sm">Loading...</p>
+          </div>
+        ) : projects.length > 0 ? (
+          <div className="border-t border-white/10">
+            {projects.map((project, index) => (
+              <ProjectCard key={project.id} project={project} index={index} />
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-16 border border-white/10">
+            <Briefcase className="w-10 h-10 text-white/20 mx-auto mb-4" />
+            <p className="text-white/30 text-sm">Projects coming soon</p>
+          </div>
+        )}
       </div>
     </section>
   );
