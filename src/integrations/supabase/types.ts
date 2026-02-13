@@ -44,6 +44,70 @@ export type Database = {
         }
         Relationships: []
       }
+      photo_comments: {
+        Row: {
+          author_name: string
+          content: string
+          created_at: string
+          id: string
+          photo_id: string
+        }
+        Insert: {
+          author_name?: string
+          content: string
+          created_at?: string
+          id?: string
+          photo_id: string
+        }
+        Update: {
+          author_name?: string
+          content?: string
+          created_at?: string
+          id?: string
+          photo_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "photo_comments_photo_id_fkey"
+            columns: ["photo_id"]
+            isOneToOne: false
+            referencedRelation: "visual_photos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      photo_reactions: {
+        Row: {
+          created_at: string
+          id: string
+          photo_id: string
+          reaction_type: string
+          session_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          photo_id: string
+          reaction_type?: string
+          session_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          photo_id?: string
+          reaction_type?: string
+          session_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "photo_reactions_photo_id_fkey"
+            columns: ["photo_id"]
+            isOneToOne: false
+            referencedRelation: "visual_photos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           id: string
@@ -64,29 +128,35 @@ export type Database = {
       }
       visual_photos: {
         Row: {
+          comments_enabled: boolean
           created_at: string
           description: string | null
           display_order: number
           id: string
           image_url: string
+          is_enabled: boolean
           title: string
           updated_at: string
         }
         Insert: {
+          comments_enabled?: boolean
           created_at?: string
           description?: string | null
           display_order?: number
           id?: string
           image_url: string
+          is_enabled?: boolean
           title?: string
           updated_at?: string
         }
         Update: {
+          comments_enabled?: boolean
           created_at?: string
           description?: string | null
           display_order?: number
           id?: string
           image_url?: string
+          is_enabled?: boolean
           title?: string
           updated_at?: string
         }

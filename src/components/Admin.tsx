@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
-import { Camera, Briefcase, User, Upload, Trash2, Plus, LogOut, GripVertical } from "lucide-react";
+import { Camera, Briefcase, User, Upload, Trash2, Plus, LogOut, GripVertical, LayoutDashboard, Eye, EyeOff, MessageSquare, Heart } from "lucide-react";
 import { toast } from "sonner";
 
 type VisualPhoto = {
@@ -10,6 +10,8 @@ type VisualPhoto = {
   description: string;
   image_url: string;
   display_order: number;
+  is_enabled: boolean;
+  comments_enabled: boolean;
 };
 
 type WorksProject = {
@@ -38,14 +40,13 @@ const Admin = () => {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isSignup, setIsSignup] = useState(false);
-  const [activeTab, setActiveTab] = useState<"visual" | "works" | "about">("visual");
+  const [activeTab, setActiveTab] = useState<"overview" | "visual" | "works" | "about">("overview");
 
-  // Data states
   const [photos, setPhotos] = useState<VisualPhoto[]>([]);
   const [projects, setProjects] = useState<WorksProject[]>([]);
   const [aboutData, setAboutData] = useState<AboutContent | null>(null);
-
-  // Form states
+  const [commentCounts, setCommentCounts] = useState<Record<string, number>>({});
+  const [reactionCounts, setReactionCounts] = useState<Record<string, number>>({});
   const [uploading, setUploading] = useState(false);
 
   const checkAdmin = useCallback(async (userId: string) => {
@@ -54,14 +55,6 @@ const Admin = () => {
   }, []);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      if (session) {
-        checkAdmin(session.user.id).then(setIsAdmin);
-      }
-      setLoading(false);
-    });
-
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       if (session) {
@@ -71,18 +64,35 @@ const Admin = () => {
       }
     });
 
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      if (session) checkAdmin(session.user.id).then(setIsAdmin);
+      setLoading(false);
+    });
+
     return () => subscription.unsubscribe();
   }, [checkAdmin]);
 
   const fetchData = useCallback(async () => {
-    const [photosRes, projectsRes, aboutRes] = await Promise.all([
+    const [photosRes, projectsRes, aboutRes, commentsRes, reactionsRes] = await Promise.all([
       supabase.from("visual_photos").select("*").order("display_order"),
       supabase.from("works_projects").select("*").order("display_order"),
       supabase.from("about_content").select("*").limit(1).single(),
+      supabase.from("photo_comments").select("photo_id"),
+      supabase.from("photo_reactions").select("photo_id"),
     ]);
     if (photosRes.data) setPhotos(photosRes.data as unknown as VisualPhoto[]);
     if (projectsRes.data) setProjects(projectsRes.data as unknown as WorksProject[]);
     if (aboutRes.data) setAboutData(aboutRes.data as unknown as AboutContent);
+
+    // Count comments per photo
+    const cc: Record<string, number> = {};
+    (commentsRes.data || []).forEach((c: any) => { cc[c.photo_id] = (cc[c.photo_id] || 0) + 1; });
+    setCommentCounts(cc);
+
+    const rc: Record<string, number> = {};
+    (reactionsRes.data || []).forEach((r: any) => { rc[r.photo_id] = (rc[r.photo_id] || 0) + 1; });
+    setReactionCounts(rc);
   }, []);
 
   useEffect(() => {
@@ -95,7 +105,7 @@ const Admin = () => {
     if (isSignup) {
       const { error } = await supabase.auth.signUp({ email, password, options: { emailRedirectTo: window.location.origin } });
       if (error) setError(error.message);
-      else toast.success("Account created! You can now log in.");
+      else toast.success("Account created!");
     } else {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) setError(error.message);
@@ -112,24 +122,16 @@ const Admin = () => {
     const ext = file.name.split(".").pop();
     const path = `${folder}/${Date.now()}.${ext}`;
     const { error } = await supabase.storage.from("portfolio-media").upload(path, file);
-    if (error) {
-      toast.error("Upload failed: " + error.message);
-      return null;
-    }
+    if (error) { toast.error("Upload failed: " + error.message); return null; }
     const { data } = supabase.storage.from("portfolio-media").getPublicUrl(path);
     return data.publicUrl;
   };
 
-  // Visual Photos handlers
-  const handleAddPhoto = async (file: File, title: string) => {
+  const handleAddPhoto = async (file: File, title: string, description: string) => {
     setUploading(true);
     const url = await uploadImage(file, "visual");
     if (url) {
-      await supabase.from("visual_photos").insert({
-        title,
-        image_url: url,
-        display_order: photos.length,
-      } as any);
+      await supabase.from("visual_photos").insert({ title, description, image_url: url, display_order: photos.length } as any);
       toast.success("Photo added");
       fetchData();
     }
@@ -144,12 +146,14 @@ const Admin = () => {
     fetchData();
   };
 
-  // Works handlers
+  const handleTogglePhoto = async (id: string, field: "is_enabled" | "comments_enabled", value: boolean) => {
+    await supabase.from("visual_photos").update({ [field]: value } as any).eq("id", id);
+    toast.success("Updated");
+    fetchData();
+  };
+
   const handleAddProject = async (project: Omit<WorksProject, "id" | "display_order">) => {
-    await supabase.from("works_projects").insert({
-      ...project,
-      display_order: projects.length,
-    } as any);
+    await supabase.from("works_projects").insert({ ...project, display_order: projects.length } as any);
     toast.success("Project added");
     fetchData();
   };
@@ -166,7 +170,6 @@ const Admin = () => {
     fetchData();
   };
 
-  // About handlers
   const handleSaveAbout = async (data: Omit<AboutContent, "id">) => {
     if (aboutData?.id) {
       await supabase.from("about_content").update(data as any).eq("id", aboutData.id);
@@ -188,45 +191,26 @@ const Admin = () => {
   if (!session || !isAdmin) {
     return (
       <section className="min-h-screen bg-neutral-950 text-white flex items-center justify-center">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="w-full max-w-sm px-8"
-        >
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="w-full max-w-sm px-8">
           <h2 className="text-2xl font-display font-bold mb-8 tracking-wide">Admin</h2>
           <form onSubmit={handleLogin} className="space-y-5">
             <div>
               <label className="text-xs text-white/40 uppercase tracking-[0.2em] block mb-2">Email</label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full bg-transparent border border-white/20 px-4 py-3 text-sm text-white focus:border-white/50 outline-none transition-colors"
-              />
+              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)}
+                className="w-full bg-transparent border border-white/20 px-4 py-3 text-sm text-white focus:border-white/50 outline-none transition-colors" />
             </div>
             <div>
               <label className="text-xs text-white/40 uppercase tracking-[0.2em] block mb-2">Password</label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full bg-transparent border border-white/20 px-4 py-3 text-sm text-white focus:border-white/50 outline-none transition-colors"
-              />
+              <input type="password" value={password} onChange={(e) => setPassword(e.target.value)}
+                className="w-full bg-transparent border border-white/20 px-4 py-3 text-sm text-white focus:border-white/50 outline-none transition-colors" />
             </div>
             {error && <p className="text-red-400 text-xs">{error}</p>}
             {session && !isAdmin && <p className="text-red-400 text-xs">Access denied. Admin role required.</p>}
-            <button
-              type="submit"
-              className="w-full border border-white/40 py-3 text-sm tracking-[0.2em] uppercase hover:bg-white/10 transition-colors"
-            >
+            <button type="submit" className="w-full border border-white/40 py-3 text-sm tracking-[0.2em] uppercase hover:bg-white/10 transition-colors">
               {isSignup ? "Sign Up" : "Login"}
             </button>
-            <button
-              type="button"
-              onClick={() => { setIsSignup(!isSignup); setError(""); }}
-              className="w-full text-xs text-white/40 py-2 hover:text-white/60 transition-colors"
-            >
+            <button type="button" onClick={() => { setIsSignup(!isSignup); setError(""); }}
+              className="w-full text-xs text-white/40 py-2 hover:text-white/60 transition-colors">
               {isSignup ? "Already have an account? Login" : "Need an account? Sign Up"}
             </button>
           </form>
@@ -234,6 +218,10 @@ const Admin = () => {
       </section>
     );
   }
+
+  const totalComments = Object.values(commentCounts).reduce((a, b) => a + b, 0);
+  const totalReactions = Object.values(reactionCounts).reduce((a, b) => a + b, 0);
+  const enabledPhotos = photos.filter((p) => p.is_enabled).length;
 
   return (
     <section className="min-h-screen bg-neutral-950 text-white pt-24 pb-16">
@@ -246,29 +234,34 @@ const Admin = () => {
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-1 mb-10 border-b border-white/10">
+        <div className="flex gap-1 mb-10 border-b border-white/10 overflow-x-auto">
           {[
+            { key: "overview" as const, label: "Overview", icon: LayoutDashboard },
             { key: "visual" as const, label: "Visual", icon: Camera },
             { key: "works" as const, label: "Works", icon: Briefcase },
             { key: "about" as const, label: "About", icon: User },
           ].map((tab) => (
-            <button
-              key={tab.key}
-              onClick={() => setActiveTab(tab.key)}
-              className={`flex items-center gap-2 px-5 py-3 text-xs tracking-[0.15em] uppercase transition-colors border-b-2 -mb-[1px] ${
-                activeTab === tab.key
-                  ? "text-white border-white"
-                  : "text-white/40 border-transparent hover:text-white/60"
-              }`}
-            >
+            <button key={tab.key} onClick={() => setActiveTab(tab.key)}
+              className={`flex items-center gap-2 px-5 py-3 text-xs tracking-[0.15em] uppercase transition-colors border-b-2 -mb-[1px] whitespace-nowrap ${
+                activeTab === tab.key ? "text-white border-white" : "text-white/40 border-transparent hover:text-white/60"
+              }`}>
               <tab.icon className="w-3.5 h-3.5" />
               {tab.label}
             </button>
           ))}
         </div>
 
-        {/* Tab Content */}
-        {activeTab === "visual" && <VisualTab photos={photos} onAdd={handleAddPhoto} onDelete={handleDeletePhoto} uploading={uploading} />}
+        {activeTab === "overview" && (
+          <OverviewTab
+            photos={photos} projects={projects} aboutData={aboutData}
+            totalComments={totalComments} totalReactions={totalReactions} enabledPhotos={enabledPhotos}
+          />
+        )}
+        {activeTab === "visual" && (
+          <VisualTab photos={photos} onAdd={handleAddPhoto} onDelete={handleDeletePhoto}
+            onToggle={handleTogglePhoto} uploading={uploading}
+            commentCounts={commentCounts} reactionCounts={reactionCounts} />
+        )}
         {activeTab === "works" && <WorksTab projects={projects} onAdd={handleAddProject} onDelete={handleDeleteProject} onUpdate={handleUpdateProject} />}
         {activeTab === "about" && <AboutTab data={aboutData} onSave={handleSaveAbout} uploadImage={uploadImage} />}
       </div>
@@ -276,21 +269,95 @@ const Admin = () => {
   );
 };
 
-// Visual Tab
-const VisualTab = ({ photos, onAdd, onDelete, uploading }: {
+// Overview Tab
+const OverviewTab = ({ photos, projects, aboutData, totalComments, totalReactions, enabledPhotos }: {
   photos: VisualPhoto[];
-  onAdd: (file: File, title: string) => Promise<void>;
+  projects: WorksProject[];
+  aboutData: AboutContent | null;
+  totalComments: number;
+  totalReactions: number;
+  enabledPhotos: number;
+}) => {
+  const stats = [
+    { label: "Total Photos", value: photos.length, icon: Camera },
+    { label: "Visible Photos", value: enabledPhotos, icon: Eye },
+    { label: "Projects", value: projects.length, icon: Briefcase },
+    { label: "Comments", value: totalComments, icon: MessageSquare },
+    { label: "Reactions", value: totalReactions, icon: Heart },
+  ];
+
+  return (
+    <div className="space-y-8">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+        {stats.map((stat) => (
+          <div key={stat.label} className="border border-white/10 p-5 text-center">
+            <stat.icon className="w-5 h-5 text-white/30 mx-auto mb-3" />
+            <p className="text-2xl font-display font-bold text-white mb-1">{stat.value}</p>
+            <p className="text-[10px] text-white/40 uppercase tracking-[0.2em]">{stat.label}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Profile overview */}
+      <div className="border border-white/10 p-6">
+        <h3 className="text-xs text-white/40 uppercase tracking-[0.2em] mb-6">Profile Overview</h3>
+        <div className="flex items-start gap-6">
+          {aboutData?.profile_image_url && (
+            <img src={aboutData.profile_image_url} alt="Profile" className="w-20 h-20 object-cover grayscale flex-shrink-0" />
+          )}
+          <div className="flex-1 min-w-0">
+            <h4 className="text-lg font-display font-bold text-white mb-1">Shawn Enzo J. Gimena</h4>
+            <p className="text-xs text-white/40 mb-3">{aboutData?.tagline || "Developer. Student. Creator."}</p>
+            <p className="text-xs text-white/30">{aboutData?.email || "enzogimena.shawn@gmail.com"}</p>
+            {aboutData?.bio_paragraphs?.[0] && (
+              <p className="text-sm text-white/50 mt-3 line-clamp-2">{aboutData.bio_paragraphs[0]}</p>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Recent photos */}
+      {photos.length > 0 && (
+        <div>
+          <h3 className="text-xs text-white/40 uppercase tracking-[0.2em] mb-4">Recent Photos</h3>
+          <div className="grid grid-cols-4 gap-3">
+            {photos.slice(0, 4).map((photo) => (
+              <div key={photo.id} className="relative aspect-square overflow-hidden border border-white/10">
+                <img src={photo.image_url} alt={photo.title} className="w-full h-full object-cover" />
+                {!photo.is_enabled && (
+                  <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                    <EyeOff className="w-4 h-4 text-white/40" />
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// Visual Tab
+const VisualTab = ({ photos, onAdd, onDelete, onToggle, uploading, commentCounts, reactionCounts }: {
+  photos: VisualPhoto[];
+  onAdd: (file: File, title: string, description: string) => Promise<void>;
   onDelete: (id: string, imageUrl: string) => Promise<void>;
+  onToggle: (id: string, field: "is_enabled" | "comments_enabled", value: boolean) => Promise<void>;
   uploading: boolean;
+  commentCounts: Record<string, number>;
+  reactionCounts: Record<string, number>;
 }) => {
   const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
   const [file, setFile] = useState<File | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!file) return toast.error("Select an image");
-    await onAdd(file, title);
+    await onAdd(file, title, description);
     setTitle("");
+    setDescription("");
     setFile(null);
   };
 
@@ -298,13 +365,10 @@ const VisualTab = ({ photos, onAdd, onDelete, uploading }: {
     <div>
       <form onSubmit={handleSubmit} className="border border-white/10 p-6 mb-8 space-y-4">
         <h3 className="text-xs text-white/40 uppercase tracking-[0.2em] mb-4">Add Photo</h3>
-        <input
-          type="text"
-          placeholder="Photo title"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          className="w-full bg-transparent border border-white/20 px-4 py-3 text-sm text-white focus:border-white/50 outline-none"
-        />
+        <input type="text" placeholder="Photo title" value={title} onChange={(e) => setTitle(e.target.value)}
+          className="w-full bg-transparent border border-white/20 px-4 py-3 text-sm text-white focus:border-white/50 outline-none" />
+        <input type="text" placeholder="Description" value={description} onChange={(e) => setDescription(e.target.value)}
+          className="w-full bg-transparent border border-white/20 px-4 py-3 text-sm text-white focus:border-white/50 outline-none" />
         <div className="flex items-center gap-4">
           <label className="flex items-center gap-2 border border-white/20 px-4 py-3 text-sm text-white/60 cursor-pointer hover:border-white/40 transition-colors flex-1">
             <Upload className="w-4 h-4" />
@@ -317,16 +381,39 @@ const VisualTab = ({ photos, onAdd, onDelete, uploading }: {
         </div>
       </form>
 
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+      <div className="space-y-3">
         {photos.map((photo) => (
-          <div key={photo.id} className="relative group border border-white/10 overflow-hidden">
-            <img src={photo.image_url} alt={photo.title} className="w-full aspect-square object-cover" />
-            <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
-              <p className="absolute bottom-3 left-3 text-xs text-white/80">{photo.title}</p>
-              <button onClick={() => onDelete(photo.id, photo.image_url)} className="p-2 border border-red-400/50 text-red-400 hover:bg-red-400/20 transition-colors">
-                <Trash2 className="w-4 h-4" />
-              </button>
+          <div key={photo.id} className={`border p-4 flex gap-4 items-start transition-colors ${photo.is_enabled ? "border-white/10" : "border-white/5 opacity-50"}`}>
+            <img src={photo.image_url} alt={photo.title} className="w-20 h-20 object-cover flex-shrink-0" />
+            <div className="flex-1 min-w-0">
+              <p className="text-sm text-white font-medium truncate">{photo.title || "Untitled"}</p>
+              <p className="text-xs text-white/40 truncate mt-0.5">{photo.description || "No description"}</p>
+              <div className="flex items-center gap-4 mt-3">
+                <button
+                  onClick={() => onToggle(photo.id, "is_enabled", !photo.is_enabled)}
+                  className={`flex items-center gap-1.5 text-[10px] uppercase tracking-wider transition-colors ${photo.is_enabled ? "text-green-400" : "text-white/30"}`}
+                >
+                  {photo.is_enabled ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
+                  {photo.is_enabled ? "Visible" : "Hidden"}
+                </button>
+                <button
+                  onClick={() => onToggle(photo.id, "comments_enabled", !photo.comments_enabled)}
+                  className={`flex items-center gap-1.5 text-[10px] uppercase tracking-wider transition-colors ${photo.comments_enabled ? "text-blue-400" : "text-white/30"}`}
+                >
+                  <MessageSquare className="w-3 h-3" />
+                  Comments {photo.comments_enabled ? "On" : "Off"}
+                </button>
+                <span className="flex items-center gap-1 text-[10px] text-white/30">
+                  <Heart className="w-3 h-3" /> {reactionCounts[photo.id] || 0}
+                </span>
+                <span className="flex items-center gap-1 text-[10px] text-white/30">
+                  <MessageSquare className="w-3 h-3" /> {commentCounts[photo.id] || 0}
+                </span>
+              </div>
             </div>
+            <button onClick={() => onDelete(photo.id, photo.image_url)} className="p-2 text-white/30 hover:text-red-400 transition-colors flex-shrink-0">
+              <Trash2 className="w-4 h-4" />
+            </button>
           </div>
         ))}
       </div>
@@ -357,25 +444,15 @@ const WorksTab = ({ projects, onAdd, onDelete, onUpdate }: {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title) return toast.error("Title required");
-    await onAdd({
-      title,
-      description,
-      tags: tags.split(",").map((t) => t.trim()).filter(Boolean),
-      link,
-    });
-    setTitle("");
-    setDescription("");
-    setTags("");
-    setLink("");
+    await onAdd({ title, description, tags: tags.split(",").map((t) => t.trim()).filter(Boolean), link });
+    setTitle(""); setDescription(""); setTags(""); setLink("");
     setShowForm(false);
   };
 
   return (
     <div>
-      <button
-        onClick={() => setShowForm(!showForm)}
-        className="flex items-center gap-2 border border-white/30 px-5 py-3 text-xs tracking-[0.15em] uppercase hover:bg-white/10 transition-colors mb-6"
-      >
+      <button onClick={() => setShowForm(!showForm)}
+        className="flex items-center gap-2 border border-white/30 px-5 py-3 text-xs tracking-[0.15em] uppercase hover:bg-white/10 transition-colors mb-6">
         <Plus className="w-3.5 h-3.5" /> Add Project
       </button>
 
@@ -455,13 +532,7 @@ const AboutTab = ({ data, onSave, uploadImage }: {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await onSave({
-      bio_paragraphs: bio.split("\n\n").filter(Boolean),
-      email: emailVal,
-      tagline,
-      skills: skills as any,
-      profile_image_url: profileUrl,
-    });
+    await onSave({ bio_paragraphs: bio.split("\n\n").filter(Boolean), email: emailVal, tagline, skills: skills as any, profile_image_url: profileUrl });
   };
 
   const handleProfileUpload = async (file: File) => {
@@ -471,9 +542,7 @@ const AboutTab = ({ data, onSave, uploadImage }: {
     setUploading(false);
   };
 
-  const addSkillCategory = () => {
-    setSkills([...skills, { title: "", skills: [] }]);
-  };
+  const addSkillCategory = () => setSkills([...skills, { title: "", skills: [] }]);
 
   const updateSkillCategory = (index: number, field: string, value: any) => {
     const updated = [...skills];
@@ -482,9 +551,7 @@ const AboutTab = ({ data, onSave, uploadImage }: {
     setSkills(updated);
   };
 
-  const removeSkillCategory = (index: number) => {
-    setSkills(skills.filter((_, i) => i !== index));
-  };
+  const removeSkillCategory = (index: number) => setSkills(skills.filter((_, i) => i !== index));
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
