@@ -37,6 +37,7 @@ const Admin = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [isSignup, setIsSignup] = useState(false);
   const [activeTab, setActiveTab] = useState<"visual" | "works" | "about">("visual");
 
   // Data states
@@ -91,9 +92,13 @@ const Admin = () => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) {
-      setError(error.message);
+    if (isSignup) {
+      const { error } = await supabase.auth.signUp({ email, password, options: { emailRedirectTo: window.location.origin } });
+      if (error) setError(error.message);
+      else toast.success("Account created! You can now log in.");
+    } else {
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) setError(error.message);
     }
   };
 
@@ -215,7 +220,14 @@ const Admin = () => {
               type="submit"
               className="w-full border border-white/40 py-3 text-sm tracking-[0.2em] uppercase hover:bg-white/10 transition-colors"
             >
-              Login
+              {isSignup ? "Sign Up" : "Login"}
+            </button>
+            <button
+              type="button"
+              onClick={() => { setIsSignup(!isSignup); setError(""); }}
+              className="w-full text-xs text-white/40 py-2 hover:text-white/60 transition-colors"
+            >
+              {isSignup ? "Already have an account? Login" : "Need an account? Sign Up"}
             </button>
           </form>
         </motion.div>
