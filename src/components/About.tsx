@@ -75,7 +75,7 @@ const About = () => {
               <p key={i} className="text-white/60 text-sm md:text-base leading-relaxed mb-6">{p}</p>
             ))}
             <div>
-              <img src={signature} alt="Signature" className="h-20 md:h-24 w-auto opacity-60 grayscale" />
+              <img src={signature} alt="Signature" className="h-20 md:h-24 w-auto opacity-60 grayscale pointer-events-none select-none" draggable={false} onContextMenu={(e) => e.preventDefault()} />
             </div>
           </motion.div>
 
@@ -86,7 +86,7 @@ const About = () => {
             className="flex flex-col items-center"
           >
             <div className="w-full max-w-md overflow-hidden">
-              <img src={profilePhoto} alt="Shawn Enzo J. Gimena" className="w-full h-auto object-cover grayscale" />
+              <img src={profilePhoto} alt="Shawn Enzo J. Gimena" className="w-full h-auto object-cover grayscale pointer-events-none select-none" draggable={false} onContextMenu={(e) => e.preventDefault()} />
             </div>
             <div className="text-center mt-6 space-y-1">
               <h2 className="text-lg md:text-xl font-display font-bold text-white tracking-wide">Shawn Enzo J. Gimena</h2>
