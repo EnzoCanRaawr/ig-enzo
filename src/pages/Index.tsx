@@ -6,6 +6,7 @@ import Visual from "@/components/Visual";
 import Admin from "@/components/Admin";
 import Footer from "@/components/Footer";
 import backgroundImage from "@/assets/background.jpg";
+import bannerImage from "@/assets/banner.jpeg";
 import { Github, Instagram, Facebook } from "lucide-react";
 
 const navItems = [
@@ -54,7 +55,7 @@ const Index = () => {
       <div
         className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-opacity duration-700"
         style={{
-          backgroundImage: `url(${backgroundImage})`,
+          backgroundImage: `url(${isHome ? bannerImage : backgroundImage})`,
           opacity: isHome ? 1 : 0.15,
         }}
       />
