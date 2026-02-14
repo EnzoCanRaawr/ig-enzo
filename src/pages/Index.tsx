@@ -1,5 +1,6 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import ParallaxSection from "@/components/ParallaxSection";
 import Works from "@/components/Works";
 import About from "@/components/About";
 import Visual from "@/components/Visual";
@@ -23,6 +24,7 @@ const socialLinks = [
 
 const Index = () => {
   const [activeSection, setActiveSection] = useState("");
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleHash = () => setActiveSection(window.location.hash);
@@ -32,18 +34,28 @@ const Index = () => {
   }, []);
 
   const renderSection = () => {
-    switch (activeSection) {
-      case "#works":
-        return <Works />;
-      case "#about":
-        return <About />;
-      case "#visual":
-        return <Visual />;
-      case "#admin":
-        return <Admin />;
-      default:
-        return null;
-    }
+    const section = (() => {
+      switch (activeSection) {
+        case "#works":
+          return <Works />;
+        case "#about":
+          return <About />;
+        case "#visual":
+          return <Visual />;
+        case "#admin":
+          return <Admin />;
+        default:
+          return null;
+      }
+    })();
+
+    if (activeSection === "#admin") return section;
+
+    return section ? (
+      <ParallaxSection scrollRef={scrollContainerRef as React.RefObject<HTMLElement>}>
+        {section}
+      </ParallaxSection>
+    ) : null;
   };
 
   const isHome = !activeSection || activeSection === "#";
@@ -150,6 +162,7 @@ const Index = () => {
         ) : (
           <motion.div
             key={activeSection}
+            ref={scrollContainerRef}
             className="relative z-10 h-full overflow-y-auto"
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
