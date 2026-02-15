@@ -19,6 +19,8 @@ type Comment = {
   author_name: string;
   content: string;
   created_at: string;
+  admin_reply: string | null;
+  admin_reply_at: string | null;
 };
 
 const getSessionId = () => {
@@ -104,12 +106,10 @@ const PhotoCard = ({ photo, index, isInView }: { photo: VisualPhoto; index: numb
         />
       </div>
 
-      {/* Title + Description below */}
       <div className="py-3 space-y-1">
         {photo.title && <p className="text-sm text-white font-medium">{photo.title}</p>}
         {photo.description && <p className="text-xs text-white/40">{photo.description}</p>}
 
-        {/* Reactions + comments button */}
         <div className="flex items-center gap-4 pt-2">
           <button onClick={toggleLike} className={`flex items-center gap-1.5 transition-colors ${liked ? "text-red-400" : "text-white/30 hover:text-white/60"}`}>
             <Heart className={`w-4 h-4 ${liked ? "fill-current" : ""}`} />
@@ -123,16 +123,25 @@ const PhotoCard = ({ photo, index, isInView }: { photo: VisualPhoto; index: numb
           )}
         </div>
 
-        {/* Comments section */}
         {photo.comments_enabled && showComments && (
           <div className="pt-3 space-y-3 border-t border-white/10 mt-3">
             {comments.map((comment) => (
-              <div key={comment.id} className="space-y-0.5">
-                <p className="text-xs">
-                  <span className="text-white/60 font-medium">{comment.author_name}</span>
-                  <span className="text-white/20 ml-2">{new Date(comment.created_at).toLocaleDateString()}</span>
-                </p>
-                <p className="text-xs text-white/40">{comment.content}</p>
+              <div key={comment.id} className="space-y-1.5">
+                <div className="space-y-0.5">
+                  <p className="text-xs">
+                    <span className="text-white/60 font-medium">{comment.author_name}</span>
+                    <span className="text-white/20 ml-2">{new Date(comment.created_at).toLocaleDateString()}</span>
+                  </p>
+                  <p className="text-xs text-white/40">{comment.content}</p>
+                </div>
+                {comment.admin_reply && (
+                  <div className="ml-4 pl-3 border-l border-white/15">
+                    <p className="text-[10px] text-white/25 mb-0.5">
+                      Admin · {comment.admin_reply_at ? new Date(comment.admin_reply_at).toLocaleDateString() : ""}
+                    </p>
+                    <p className="text-xs text-white/50">{comment.admin_reply}</p>
+                  </div>
+                )}
               </div>
             ))}
             <form onSubmit={submitComment} className="space-y-2">

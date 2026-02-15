@@ -10,6 +10,7 @@ type WorksProject = {
   tags: string[];
   link: string;
   display_order: number;
+  image_url: string | null;
 };
 
 const ProjectCard = ({ project, index }: { project: WorksProject; index: number }) => {
@@ -28,11 +29,19 @@ const ProjectCard = ({ project, index }: { project: WorksProject; index: number 
       transition={{ duration: 0.6, delay: index * 0.1 }}
     >
       <div className="flex items-start md:items-center justify-between gap-6 flex-col md:flex-row">
-        <div className="flex items-baseline gap-6 md:gap-10">
-          <span className="text-sm text-white/30 tracking-wider font-mono">
+        <div className="flex items-start gap-6 md:gap-10 flex-1 min-w-0">
+          <span className="text-sm text-white/30 tracking-wider font-mono mt-1 md:mt-2 flex-shrink-0">
             {String(index + 1).padStart(2, "0")}
           </span>
-          <div>
+          {project.image_url && (
+            <img
+              src={project.image_url}
+              alt={project.title}
+              className="w-16 h-16 md:w-20 md:h-20 object-cover flex-shrink-0 border border-white/10 group-hover:border-white/20 transition-colors"
+              loading="lazy"
+            />
+          )}
+          <div className="min-w-0">
             <h3 className="text-2xl md:text-3xl lg:text-4xl font-display font-bold text-white group-hover:text-white/70 transition-colors">
               {project.title}
             </h3>

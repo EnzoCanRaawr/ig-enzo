@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
-import { Camera, Briefcase, User, Upload, Trash2, Plus, LogOut, GripVertical, LayoutDashboard, Eye, EyeOff, MessageSquare, Heart } from "lucide-react";
+import { Camera, Briefcase, User, Upload, Trash2, Plus, LogOut, GripVertical, LayoutDashboard, Eye, EyeOff, MessageSquare, Heart, Reply, Image } from "lucide-react";
 import { toast } from "sonner";
 
 type VisualPhoto = {
@@ -21,6 +21,7 @@ type WorksProject = {
   tags: string[];
   link: string;
   display_order: number;
+  image_url: string | null;
 };
 
 type AboutContent = {
@@ -30,6 +31,16 @@ type AboutContent = {
   profile_image_url: string;
   email: string;
   tagline: string;
+};
+
+type Comment = {
+  id: string;
+  photo_id: string;
+  author_name: string;
+  content: string;
+  created_at: string;
+  admin_reply: string | null;
+  admin_reply_at: string | null;
 };
 
 const Admin = () => {
@@ -47,6 +58,7 @@ const Admin = () => {
   const [aboutData, setAboutData] = useState<AboutContent | null>(null);
   const [commentCounts, setCommentCounts] = useState<Record<string, number>>({});
   const [reactionCounts, setReactionCounts] = useState<Record<string, number>>({});
+  const [allComments, setAllComments] = useState<Comment[]>([]);
   const [uploading, setUploading] = useState(false);
 
   const checkAdmin = useCallback(async (userId: string) => {
@@ -78,14 +90,14 @@ const Admin = () => {
       supabase.from("visual_photos").select("*").order("display_order"),
       supabase.from("works_projects").select("*").order("display_order"),
       supabase.from("about_content").select("*").limit(1).single(),
-      supabase.from("photo_comments").select("photo_id"),
+      supabase.from("photo_comments").select("*").order("created_at", { ascending: true }),
       supabase.from("photo_reactions").select("photo_id"),
     ]);
     if (photosRes.data) setPhotos(photosRes.data as unknown as VisualPhoto[]);
     if (projectsRes.data) setProjects(projectsRes.data as unknown as WorksProject[]);
     if (aboutRes.data) setAboutData(aboutRes.data as unknown as AboutContent);
+    if (commentsRes.data) setAllComments(commentsRes.data as unknown as Comment[]);
 
-    // Count comments per photo
     const cc: Record<string, number> = {};
     (commentsRes.data || []).forEach((c: any) => { cc[c.photo_id] = (cc[c.photo_id] || 0) + 1; });
     setCommentCounts(cc);
@@ -149,6 +161,12 @@ const Admin = () => {
   const handleTogglePhoto = async (id: string, field: "is_enabled" | "comments_enabled", value: boolean) => {
     await supabase.from("visual_photos").update({ [field]: value } as any).eq("id", id);
     toast.success("Updated");
+    fetchData();
+  };
+
+  const handleReplyComment = async (commentId: string, reply: string) => {
+    await supabase.from("photo_comments").update({ admin_reply: reply, admin_reply_at: new Date().toISOString() } as any).eq("id", commentId);
+    toast.success("Reply sent");
     fetchData();
   };
 
@@ -233,7 +251,6 @@ const Admin = () => {
           </button>
         </div>
 
-        {/* Tabs */}
         <div className="flex gap-1 mb-10 border-b border-white/10 overflow-x-auto">
           {[
             { key: "overview" as const, label: "Overview", icon: LayoutDashboard },
@@ -260,9 +277,10 @@ const Admin = () => {
         {activeTab === "visual" && (
           <VisualTab photos={photos} onAdd={handleAddPhoto} onDelete={handleDeletePhoto}
             onToggle={handleTogglePhoto} uploading={uploading}
-            commentCounts={commentCounts} reactionCounts={reactionCounts} />
+            commentCounts={commentCounts} reactionCounts={reactionCounts}
+            allComments={allComments} onReply={handleReplyComment} />
         )}
-        {activeTab === "works" && <WorksTab projects={projects} onAdd={handleAddProject} onDelete={handleDeleteProject} onUpdate={handleUpdateProject} />}
+        {activeTab === "works" && <WorksTab projects={projects} onAdd={handleAddProject} onDelete={handleDeleteProject} onUpdate={handleUpdateProject} uploadImage={uploadImage} />}
         {activeTab === "about" && <AboutTab data={aboutData} onSave={handleSaveAbout} uploadImage={uploadImage} />}
       </div>
     </section>
@@ -298,7 +316,6 @@ const OverviewTab = ({ photos, projects, aboutData, totalComments, totalReaction
         ))}
       </div>
 
-      {/* Profile overview */}
       <div className="border border-white/10 p-6">
         <h3 className="text-xs text-white/40 uppercase tracking-[0.2em] mb-6">Profile Overview</h3>
         <div className="flex items-start gap-6">
@@ -316,7 +333,6 @@ const OverviewTab = ({ photos, projects, aboutData, totalComments, totalReaction
         </div>
       </div>
 
-      {/* Recent photos */}
       {photos.length > 0 && (
         <div>
           <h3 className="text-xs text-white/40 uppercase tracking-[0.2em] mb-4">Recent Photos</h3>
@@ -339,7 +355,7 @@ const OverviewTab = ({ photos, projects, aboutData, totalComments, totalReaction
 };
 
 // Visual Tab
-const VisualTab = ({ photos, onAdd, onDelete, onToggle, uploading, commentCounts, reactionCounts }: {
+const VisualTab = ({ photos, onAdd, onDelete, onToggle, uploading, commentCounts, reactionCounts, allComments, onReply }: {
   photos: VisualPhoto[];
   onAdd: (file: File, title: string, description: string) => Promise<void>;
   onDelete: (id: string, imageUrl: string) => Promise<void>;
@@ -347,10 +363,15 @@ const VisualTab = ({ photos, onAdd, onDelete, onToggle, uploading, commentCounts
   uploading: boolean;
   commentCounts: Record<string, number>;
   reactionCounts: Record<string, number>;
+  allComments: Comment[];
+  onReply: (commentId: string, reply: string) => Promise<void>;
 }) => {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [file, setFile] = useState<File | null>(null);
+  const [expandedPhoto, setExpandedPhoto] = useState<string | null>(null);
+  const [replyingTo, setReplyingTo] = useState<string | null>(null);
+  const [replyText, setReplyText] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -359,6 +380,13 @@ const VisualTab = ({ photos, onAdd, onDelete, onToggle, uploading, commentCounts
     setTitle("");
     setDescription("");
     setFile(null);
+  };
+
+  const handleReply = async (commentId: string) => {
+    if (!replyText.trim()) return;
+    await onReply(commentId, replyText.trim());
+    setReplyText("");
+    setReplyingTo(null);
   };
 
   return (
@@ -382,40 +410,103 @@ const VisualTab = ({ photos, onAdd, onDelete, onToggle, uploading, commentCounts
       </form>
 
       <div className="space-y-3">
-        {photos.map((photo) => (
-          <div key={photo.id} className={`border p-4 flex gap-4 items-start transition-colors ${photo.is_enabled ? "border-white/10" : "border-white/5 opacity-50"}`}>
-            <img src={photo.image_url} alt={photo.title} className="w-20 h-20 object-cover flex-shrink-0" />
-            <div className="flex-1 min-w-0">
-              <p className="text-sm text-white font-medium truncate">{photo.title || "Untitled"}</p>
-              <p className="text-xs text-white/40 truncate mt-0.5">{photo.description || "No description"}</p>
-              <div className="flex items-center gap-4 mt-3">
-                <button
-                  onClick={() => onToggle(photo.id, "is_enabled", !photo.is_enabled)}
-                  className={`flex items-center gap-1.5 text-[10px] uppercase tracking-wider transition-colors ${photo.is_enabled ? "text-green-400" : "text-white/30"}`}
-                >
-                  {photo.is_enabled ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
-                  {photo.is_enabled ? "Visible" : "Hidden"}
+        {photos.map((photo) => {
+          const photoComments = allComments.filter(c => c.photo_id === photo.id);
+          return (
+            <div key={photo.id} className={`border p-4 transition-colors ${photo.is_enabled ? "border-white/10" : "border-white/5 opacity-50"}`}>
+              <div className="flex gap-4 items-start">
+                <img src={photo.image_url} alt={photo.title} className="w-20 h-20 object-cover flex-shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-white font-medium truncate">{photo.title || "Untitled"}</p>
+                  <p className="text-xs text-white/40 truncate mt-0.5">{photo.description || "No description"}</p>
+                  <div className="flex items-center gap-4 mt-3 flex-wrap">
+                    <button
+                      onClick={() => onToggle(photo.id, "is_enabled", !photo.is_enabled)}
+                      className={`flex items-center gap-1.5 text-[10px] uppercase tracking-wider transition-colors ${photo.is_enabled ? "text-green-400" : "text-white/30"}`}
+                    >
+                      {photo.is_enabled ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
+                      {photo.is_enabled ? "Visible" : "Hidden"}
+                    </button>
+                    <button
+                      onClick={() => onToggle(photo.id, "comments_enabled", !photo.comments_enabled)}
+                      className={`flex items-center gap-1.5 text-[10px] uppercase tracking-wider transition-colors ${photo.comments_enabled ? "text-blue-400" : "text-white/30"}`}
+                    >
+                      <MessageSquare className="w-3 h-3" />
+                      Comments {photo.comments_enabled ? "On" : "Off"}
+                    </button>
+                    <span className="flex items-center gap-1 text-[10px] text-white/30">
+                      <Heart className="w-3 h-3" /> {reactionCounts[photo.id] || 0}
+                    </span>
+                    <button
+                      onClick={() => setExpandedPhoto(expandedPhoto === photo.id ? null : photo.id)}
+                      className="flex items-center gap-1 text-[10px] text-white/30 hover:text-white/60 transition-colors"
+                    >
+                      <MessageSquare className="w-3 h-3" /> {commentCounts[photo.id] || 0} comments
+                    </button>
+                  </div>
+                </div>
+                <button onClick={() => onDelete(photo.id, photo.image_url)} className="p-2 text-white/30 hover:text-red-400 transition-colors flex-shrink-0">
+                  <Trash2 className="w-4 h-4" />
                 </button>
-                <button
-                  onClick={() => onToggle(photo.id, "comments_enabled", !photo.comments_enabled)}
-                  className={`flex items-center gap-1.5 text-[10px] uppercase tracking-wider transition-colors ${photo.comments_enabled ? "text-blue-400" : "text-white/30"}`}
-                >
-                  <MessageSquare className="w-3 h-3" />
-                  Comments {photo.comments_enabled ? "On" : "Off"}
-                </button>
-                <span className="flex items-center gap-1 text-[10px] text-white/30">
-                  <Heart className="w-3 h-3" /> {reactionCounts[photo.id] || 0}
-                </span>
-                <span className="flex items-center gap-1 text-[10px] text-white/30">
-                  <MessageSquare className="w-3 h-3" /> {commentCounts[photo.id] || 0}
-                </span>
               </div>
+
+              {/* Expandable comments section */}
+              {expandedPhoto === photo.id && photoComments.length > 0 && (
+                <div className="mt-4 border-t border-white/10 pt-4 space-y-3">
+                  <h4 className="text-[10px] text-white/40 uppercase tracking-[0.2em]">Comments</h4>
+                  {photoComments.map((comment) => (
+                    <div key={comment.id} className="border border-white/5 p-3 space-y-2">
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <p className="text-xs">
+                            <span className="text-white/60 font-medium">{comment.author_name}</span>
+                            <span className="text-white/20 ml-2">{new Date(comment.created_at).toLocaleDateString()}</span>
+                          </p>
+                          <p className="text-xs text-white/40 mt-1">{comment.content}</p>
+                        </div>
+                        {!comment.admin_reply && (
+                          <button
+                            onClick={() => { setReplyingTo(replyingTo === comment.id ? null : comment.id); setReplyText(""); }}
+                            className="text-white/30 hover:text-white/60 transition-colors flex-shrink-0 p-1"
+                          >
+                            <Reply className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                      </div>
+
+                      {comment.admin_reply && (
+                        <div className="ml-4 pl-3 border-l border-white/10">
+                          <p className="text-[10px] text-white/30 mb-1">Admin reply · {comment.admin_reply_at ? new Date(comment.admin_reply_at).toLocaleDateString() : ""}</p>
+                          <p className="text-xs text-white/50">{comment.admin_reply}</p>
+                        </div>
+                      )}
+
+                      {replyingTo === comment.id && (
+                        <div className="ml-4 flex gap-2">
+                          <input
+                            type="text"
+                            placeholder="Write a reply..."
+                            value={replyText}
+                            onChange={(e) => setReplyText(e.target.value)}
+                            onKeyDown={(e) => e.key === "Enter" && handleReply(comment.id)}
+                            className="flex-1 bg-transparent border border-white/20 px-3 py-2 text-xs text-white focus:border-white/40 outline-none"
+                            autoFocus
+                          />
+                          <button
+                            onClick={() => handleReply(comment.id)}
+                            className="border border-white/30 px-3 py-2 text-[10px] uppercase tracking-wider hover:bg-white/10 transition-colors"
+                          >
+                            Reply
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
-            <button onClick={() => onDelete(photo.id, photo.image_url)} className="p-2 text-white/30 hover:text-red-400 transition-colors flex-shrink-0">
-              <Trash2 className="w-4 h-4" />
-            </button>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {photos.length === 0 && (
@@ -429,24 +520,38 @@ const VisualTab = ({ photos, onAdd, onDelete, onToggle, uploading, commentCounts
 };
 
 // Works Tab
-const WorksTab = ({ projects, onAdd, onDelete, onUpdate }: {
+const WorksTab = ({ projects, onAdd, onDelete, onUpdate, uploadImage }: {
   projects: WorksProject[];
   onAdd: (project: Omit<WorksProject, "id" | "display_order">) => Promise<void>;
   onDelete: (id: string) => Promise<void>;
   onUpdate: (id: string, updates: Partial<WorksProject>) => Promise<void>;
+  uploadImage: (file: File, folder: string) => Promise<string | null>;
 }) => {
   const [showForm, setShowForm] = useState(false);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [tags, setTags] = useState("");
   const [link, setLink] = useState("");
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title) return toast.error("Title required");
-    await onAdd({ title, description, tags: tags.split(",").map((t) => t.trim()).filter(Boolean), link });
-    setTitle(""); setDescription(""); setTags(""); setLink("");
+    setUploading(true);
+    let imageUrl: string | null = null;
+    if (imageFile) {
+      imageUrl = await uploadImage(imageFile, "works");
+    }
+    await onAdd({ title, description, tags: tags.split(",").map((t) => t.trim()).filter(Boolean), link, image_url: imageUrl });
+    setTitle(""); setDescription(""); setTags(""); setLink(""); setImageFile(null);
     setShowForm(false);
+    setUploading(false);
+  };
+
+  const handleProjectImageUpload = async (projectId: string, file: File) => {
+    const url = await uploadImage(file, "works");
+    if (url) await onUpdate(projectId, { image_url: url } as any);
   };
 
   return (
@@ -466,8 +571,15 @@ const WorksTab = ({ projects, onAdd, onDelete, onUpdate }: {
             className="w-full bg-transparent border border-white/20 px-4 py-3 text-sm text-white focus:border-white/50 outline-none" />
           <input type="url" placeholder="Project URL" value={link} onChange={(e) => setLink(e.target.value)}
             className="w-full bg-transparent border border-white/20 px-4 py-3 text-sm text-white focus:border-white/50 outline-none" />
+          <label className="flex items-center gap-2 border border-white/20 px-4 py-3 text-sm text-white/60 cursor-pointer hover:border-white/40 transition-colors">
+            <Image className="w-4 h-4" />
+            {imageFile ? imageFile.name : "Project image (optional)"}
+            <input type="file" accept="image/*" onChange={(e) => setImageFile(e.target.files?.[0] || null)} className="hidden" />
+          </label>
           <div className="flex gap-3">
-            <button type="submit" className="border border-white/40 px-6 py-3 text-xs tracking-[0.15em] uppercase hover:bg-white/10 transition-colors">Save</button>
+            <button type="submit" disabled={uploading} className="border border-white/40 px-6 py-3 text-xs tracking-[0.15em] uppercase hover:bg-white/10 transition-colors disabled:opacity-30">
+              {uploading ? "Saving..." : "Save"}
+            </button>
             <button type="button" onClick={() => setShowForm(false)} className="px-6 py-3 text-xs text-white/40 tracking-[0.15em] uppercase hover:text-white/60 transition-colors">Cancel</button>
           </div>
         </form>
@@ -478,7 +590,10 @@ const WorksTab = ({ projects, onAdd, onDelete, onUpdate }: {
           <div key={project.id} className="border border-white/10 p-5 flex items-center justify-between gap-4">
             <div className="flex items-center gap-4 flex-1 min-w-0">
               <GripVertical className="w-4 h-4 text-white/20 flex-shrink-0" />
-              <div className="min-w-0">
+              {project.image_url && (
+                <img src={project.image_url} alt={project.title} className="w-14 h-14 object-cover flex-shrink-0 border border-white/10" />
+              )}
+              <div className="min-w-0 flex-1">
                 <p className="text-sm text-white font-medium truncate">{String(i + 1).padStart(2, "0")} — {project.title}</p>
                 <p className="text-xs text-white/40 truncate">{project.description}</p>
                 <div className="flex gap-2 mt-1">
@@ -488,9 +603,15 @@ const WorksTab = ({ projects, onAdd, onDelete, onUpdate }: {
                 </div>
               </div>
             </div>
-            <button onClick={() => onDelete(project.id)} className="p-2 text-white/30 hover:text-red-400 transition-colors flex-shrink-0">
-              <Trash2 className="w-4 h-4" />
-            </button>
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <label className="p-2 text-white/30 hover:text-white/60 transition-colors cursor-pointer">
+                <Image className="w-4 h-4" />
+                <input type="file" accept="image/*" onChange={(e) => e.target.files?.[0] && handleProjectImageUpload(project.id, e.target.files[0])} className="hidden" />
+              </label>
+              <button onClick={() => onDelete(project.id)} className="p-2 text-white/30 hover:text-red-400 transition-colors">
+                <Trash2 className="w-4 h-4" />
+              </button>
+            </div>
           </div>
         ))}
       </div>
