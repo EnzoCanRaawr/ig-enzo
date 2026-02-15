@@ -102,23 +102,7 @@ const Index = () => {
             ))}
           </ul>
 
-          <div className="flex items-center gap-3 sm:gap-5">
-            {socialLinks.map((link, i) => (
-              <motion.a
-                key={link.label}
-                href={link.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.5 + i * 0.1 }}
-                className="text-white/50 hover:text-white transition-colors"
-                aria-label={link.label}
-              >
-                <link.icon className="w-4 h-4 sm:w-[18px] sm:h-[18px]" />
-              </motion.a>
-            ))}
-          </div>
+        {/* Social links removed from navbar */}
         </div>
       </motion.nav>
 
@@ -141,6 +125,20 @@ const Index = () => {
               <p className="text-[10px] sm:text-xs md:text-sm text-white/70 tracking-[0.15em] sm:tracking-[0.25em] uppercase italic">
                 Student. Developer. Creating. Learning.
               </p>
+              <div className="flex items-center justify-end gap-3 mt-4">
+                {socialLinks.map((link) => (
+                  <a
+                    key={link.label}
+                    href={link.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-white/50 hover:text-white transition-colors"
+                    aria-label={link.label}
+                  >
+                    <link.icon className="w-4 h-4" />
+                  </a>
+                ))}
+              </div>
             </div>
 
             {/* Discover button centered */}
