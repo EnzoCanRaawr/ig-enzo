@@ -46,6 +46,8 @@ export type Database = {
       }
       photo_comments: {
         Row: {
+          admin_reply: string | null
+          admin_reply_at: string | null
           author_name: string
           content: string
           created_at: string
@@ -53,6 +55,8 @@ export type Database = {
           photo_id: string
         }
         Insert: {
+          admin_reply?: string | null
+          admin_reply_at?: string | null
           author_name?: string
           content: string
           created_at?: string
@@ -60,6 +64,8 @@ export type Database = {
           photo_id: string
         }
         Update: {
+          admin_reply?: string | null
+          admin_reply_at?: string | null
           author_name?: string
           content?: string
           created_at?: string
@@ -168,6 +174,7 @@ export type Database = {
           description: string | null
           display_order: number
           id: string
+          image_url: string | null
           link: string | null
           tags: string[] | null
           title: string
@@ -178,6 +185,7 @@ export type Database = {
           description?: string | null
           display_order?: number
           id?: string
+          image_url?: string | null
           link?: string | null
           tags?: string[] | null
           title: string
@@ -188,6 +196,7 @@ export type Database = {
           description?: string | null
           display_order?: number
           id?: string
+          image_url?: string | null
           link?: string | null
           tags?: string[] | null
           title?: string
