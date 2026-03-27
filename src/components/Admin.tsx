@@ -260,6 +260,7 @@ const Admin = () => {
             { key: "visual" as const, label: "Visual", icon: Camera },
             { key: "works" as const, label: "Works", icon: Briefcase },
             { key: "about" as const, label: "About", icon: User },
+            { key: "settings" as const, label: "Settings", icon: Settings },
           ].map((tab) => (
             <button key={tab.key} onClick={() => setActiveTab(tab.key)}
               className={`flex items-center gap-2 px-5 py-3 text-xs tracking-[0.15em] uppercase transition-colors border-b-2 -mb-[1px] whitespace-nowrap ${
@@ -285,6 +286,7 @@ const Admin = () => {
         )}
         {activeTab === "works" && <WorksTab projects={projects} onAdd={handleAddProject} onDelete={handleDeleteProject} onUpdate={handleUpdateProject} uploadImage={uploadImage} />}
         {activeTab === "about" && <AboutTab data={aboutData} onSave={handleSaveAbout} uploadImage={uploadImage} />}
+        {activeTab === "settings" && <SettingsTab settings={siteSettings} uploadImage={uploadImage} onSaved={fetchData} />}
       </div>
     </section>
   );
