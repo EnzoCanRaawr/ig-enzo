@@ -8,6 +8,7 @@ import Admin from "@/components/Admin";
 import Footer from "@/components/Footer";
 import bannerImage from "@/assets/banner.jpeg";
 import { Github, Instagram, Facebook } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 const navItems = [
   { label: "main.", href: "#" },
@@ -25,6 +26,13 @@ const socialLinks = [
 const Index = () => {
   const [activeSection, setActiveSection] = useState("");
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [heroBg, setHeroBg] = useState<{ type: "image" | "video"; url: string | null }>({ type: "image", url: null });
+
+  useEffect(() => {
+    supabase.from("site_settings").select("*").limit(1).single().then(({ data }) => {
+      if (data) setHeroBg({ type: (data as any).hero_bg_type || "image", url: (data as any).hero_bg_url || null });
+    });
+  }, []);
 
   useEffect(() => {
     const handleHash = () => setActiveSection(window.location.hash);
@@ -62,14 +70,23 @@ const Index = () => {
 
   return (
     <div className="h-screen w-screen overflow-hidden relative bg-black">
-      {/* Background image */}
-      <div
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-opacity duration-700"
-        style={{
-          backgroundImage: `url(${bannerImage})`,
-          opacity: isHome ? 1 : 0.08,
-        }}
-      />
+      {/* Background media */}
+      {heroBg.type === "video" && heroBg.url ? (
+        <video
+          autoPlay muted loop playsInline
+          className="absolute inset-0 w-full h-full object-cover transition-opacity duration-700"
+          style={{ opacity: isHome ? 1 : 0.08 }}
+          src={heroBg.url}
+        />
+      ) : (
+        <div
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-opacity duration-700"
+          style={{
+            backgroundImage: `url(${heroBg.url || bannerImage})`,
+            opacity: isHome ? 1 : 0.08,
+          }}
+        />
+      )}
       <div className="absolute inset-0 bg-black/40" />
 
       {/* Navigation */}
