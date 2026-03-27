@@ -65,25 +65,10 @@ const About = () => {
       <div className="max-w-6xl mx-auto px-8 md:px-12">
         <div className="grid lg:grid-cols-2 gap-16 lg:gap-20 mb-24">
           <motion.div
-            ref={ref}
             initial={{ opacity: 0, y: 40 }}
             animate={isInView ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 0.7 }}
-            className="flex flex-col justify-center"
-          >
-            {bioParagraphs.map((p, i) => (
-              <p key={i} className="text-white/60 text-sm md:text-base leading-relaxed mb-6">{p}</p>
-            ))}
-            <div>
-              <img src={signature} alt="Signature" className="h-20 md:h-24 w-auto opacity-60 grayscale pointer-events-none select-none" draggable={false} onContextMenu={(e) => e.preventDefault()} />
-            </div>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 40 }}
-            animate={isInView ? { opacity: 1, y: 0 } : {}}
-            transition={{ duration: 0.7, delay: 0.2 }}
-            className="flex flex-col items-center"
+            className="flex flex-col items-center order-first"
           >
             <div className="w-full max-w-md overflow-hidden">
               <img src={profilePhoto} alt="Shawn Enzo J. Gimena" className="w-full h-auto object-cover grayscale pointer-events-none select-none" draggable={false} onContextMenu={(e) => e.preventDefault()} />
@@ -92,6 +77,21 @@ const About = () => {
               <h2 className="text-lg md:text-xl font-display font-bold text-white tracking-wide">Shawn Enzo J. Gimena</h2>
               <p className="text-xs text-white/40 tracking-[0.2em] uppercase">{tagline}</p>
               <p className="text-xs text-white/30 mt-2">For collaborations, {contactEmail}</p>
+            </div>
+          </motion.div>
+
+          <motion.div
+            ref={ref}
+            initial={{ opacity: 0, y: 40 }}
+            animate={isInView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.7, delay: 0.2 }}
+            className="flex flex-col justify-center"
+          >
+            {bioParagraphs.map((p, i) => (
+              <p key={i} className="text-white/60 text-sm md:text-base leading-relaxed mb-6">{p}</p>
+            ))}
+            <div>
+              <img src={signature} alt="Signature" className="h-20 md:h-24 w-auto opacity-60 grayscale pointer-events-none select-none" draggable={false} onContextMenu={(e) => e.preventDefault()} />
             </div>
           </motion.div>
         </div>
