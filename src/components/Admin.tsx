@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
-import { Camera, Briefcase, User, Upload, Trash2, Plus, LogOut, GripVertical, LayoutDashboard, Eye, EyeOff, MessageSquare, Heart, Reply, Image } from "lucide-react";
+import { Camera, Briefcase, User, Upload, Trash2, Plus, LogOut, GripVertical, LayoutDashboard, Eye, EyeOff, MessageSquare, Heart, Reply, Image, Settings, Video } from "lucide-react";
 import { toast } from "sonner";
 
 type VisualPhoto = {
@@ -51,7 +51,8 @@ const Admin = () => {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isSignup, setIsSignup] = useState(false);
-  const [activeTab, setActiveTab] = useState<"overview" | "visual" | "works" | "about">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "visual" | "works" | "about" | "settings">("overview");
+  const [siteSettings, setSiteSettings] = useState<{ id: string; hero_bg_type: string; hero_bg_url: string | null } | null>(null);
 
   const [photos, setPhotos] = useState<VisualPhoto[]>([]);
   const [projects, setProjects] = useState<WorksProject[]>([]);
@@ -86,17 +87,19 @@ const Admin = () => {
   }, [checkAdmin]);
 
   const fetchData = useCallback(async () => {
-    const [photosRes, projectsRes, aboutRes, commentsRes, reactionsRes] = await Promise.all([
+    const [photosRes, projectsRes, aboutRes, commentsRes, reactionsRes, settingsRes] = await Promise.all([
       supabase.from("visual_photos").select("*").order("display_order"),
       supabase.from("works_projects").select("*").order("display_order"),
       supabase.from("about_content").select("*").limit(1).single(),
       supabase.from("photo_comments").select("*").order("created_at", { ascending: true }),
       supabase.from("photo_reactions").select("photo_id"),
+      supabase.from("site_settings").select("*").limit(1).single(),
     ]);
     if (photosRes.data) setPhotos(photosRes.data as unknown as VisualPhoto[]);
     if (projectsRes.data) setProjects(projectsRes.data as unknown as WorksProject[]);
     if (aboutRes.data) setAboutData(aboutRes.data as unknown as AboutContent);
     if (commentsRes.data) setAllComments(commentsRes.data as unknown as Comment[]);
+    if (settingsRes.data) setSiteSettings(settingsRes.data as any);
 
     const cc: Record<string, number> = {};
     (commentsRes.data || []).forEach((c: any) => { cc[c.photo_id] = (cc[c.photo_id] || 0) + 1; });
