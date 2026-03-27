@@ -70,14 +70,23 @@ const Index = () => {
 
   return (
     <div className="h-screen w-screen overflow-hidden relative bg-black">
-      {/* Background image */}
-      <div
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-opacity duration-700"
-        style={{
-          backgroundImage: `url(${bannerImage})`,
-          opacity: isHome ? 1 : 0.08,
-        }}
-      />
+      {/* Background media */}
+      {heroBg.type === "video" && heroBg.url ? (
+        <video
+          autoPlay muted loop playsInline
+          className="absolute inset-0 w-full h-full object-cover transition-opacity duration-700"
+          style={{ opacity: isHome ? 1 : 0.08 }}
+          src={heroBg.url}
+        />
+      ) : (
+        <div
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-opacity duration-700"
+          style={{
+            backgroundImage: `url(${heroBg.url || bannerImage})`,
+            opacity: isHome ? 1 : 0.08,
+          }}
+        />
+      )}
       <div className="absolute inset-0 bg-black/40" />
 
       {/* Navigation */}
