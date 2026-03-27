@@ -70,7 +70,7 @@ const About = () => {
             transition={{ duration: 0.7 }}
             className="flex flex-col items-center order-first"
           >
-            <div className="w-full max-w-md overflow-hidden">
+            <div className="w-full max-w-lg overflow-hidden border border-white/10 shadow-[0_8px_30px_-8px_rgba(255,255,255,0.08)]">
               <img src={profilePhoto} alt="Shawn Enzo J. Gimena" className="w-full h-auto object-cover grayscale pointer-events-none select-none" draggable={false} onContextMenu={(e) => e.preventDefault()} />
             </div>
             <div className="text-center mt-6 space-y-1">
