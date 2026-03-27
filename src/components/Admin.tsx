@@ -740,4 +740,113 @@ const AboutTab = ({ data, onSave, uploadImage }: {
   );
 };
 
+// Settings Tab
+const SettingsTab = ({ settings, uploadImage, onSaved }: {
+  settings: { id: string; hero_bg_type: string; hero_bg_url: string | null } | null;
+  uploadImage: (file: File, folder: string) => Promise<string | null>;
+  onSaved: () => void;
+}) => {
+  const [bgType, setBgType] = useState(settings?.hero_bg_type || "image");
+  const [bgUrl, setBgUrl] = useState(settings?.hero_bg_url || "");
+  const [uploading, setUploading] = useState(false);
+
+  const handleFileUpload = async (file: File) => {
+    setUploading(true);
+    const url = await uploadImage(file, "backgrounds");
+    if (url) setBgUrl(url);
+    setUploading(false);
+  };
+
+  const handleSave = async () => {
+    if (!settings?.id) return;
+    await supabase.from("site_settings").update({
+      hero_bg_type: bgType,
+      hero_bg_url: bgUrl || null,
+      updated_at: new Date().toISOString(),
+    } as any).eq("id", settings.id);
+    toast.success("Background settings saved");
+    onSaved();
+  };
+
+  return (
+    <div className="space-y-8">
+      <div className="border border-white/10 p-6 space-y-6">
+        <h3 className="text-xs text-white/40 uppercase tracking-[0.2em] mb-4">Hero Background</h3>
+
+        <div>
+          <label className="text-xs text-white/40 uppercase tracking-[0.2em] block mb-3">Type</label>
+          <div className="flex gap-3">
+            <button
+              type="button"
+              onClick={() => setBgType("image")}
+              className={`flex items-center gap-2 px-4 py-2.5 text-xs tracking-[0.15em] uppercase border transition-colors ${
+                bgType === "image" ? "border-white text-white" : "border-white/20 text-white/40 hover:border-white/40"
+              }`}
+            >
+              <Image className="w-3.5 h-3.5" /> Image
+            </button>
+            <button
+              type="button"
+              onClick={() => setBgType("video")}
+              className={`flex items-center gap-2 px-4 py-2.5 text-xs tracking-[0.15em] uppercase border transition-colors ${
+                bgType === "video" ? "border-white text-white" : "border-white/20 text-white/40 hover:border-white/40"
+              }`}
+            >
+              <Video className="w-3.5 h-3.5" /> Video
+            </button>
+          </div>
+        </div>
+
+        <div>
+          <label className="text-xs text-white/40 uppercase tracking-[0.2em] block mb-2">
+            Upload {bgType === "video" ? "Video" : "Image"}
+          </label>
+          <div className="flex items-center gap-4">
+            <label className="flex items-center gap-2 px-4 py-2.5 border border-white/20 text-xs text-white/50 hover:border-white/40 hover:text-white/70 cursor-pointer transition-colors">
+              <Upload className="w-3.5 h-3.5" />
+              {uploading ? "Uploading..." : "Choose File"}
+              <input
+                type="file"
+                accept={bgType === "video" ? "video/*" : "image/*"}
+                className="hidden"
+                onChange={(e) => e.target.files?.[0] && handleFileUpload(e.target.files[0])}
+              />
+            </label>
+          </div>
+        </div>
+
+        <div>
+          <label className="text-xs text-white/40 uppercase tracking-[0.2em] block mb-2">Or paste URL</label>
+          <input
+            type="text"
+            value={bgUrl}
+            onChange={(e) => setBgUrl(e.target.value)}
+            placeholder={bgType === "video" ? "https://example.com/video.mp4" : "https://example.com/image.jpg"}
+            className="w-full bg-transparent border border-white/20 px-4 py-3 text-sm text-white focus:border-white/50 outline-none"
+          />
+        </div>
+
+        {bgUrl && (
+          <div>
+            <label className="text-xs text-white/40 uppercase tracking-[0.2em] block mb-2">Preview</label>
+            {bgType === "video" ? (
+              <video src={bgUrl} className="w-full max-w-md aspect-video object-cover border border-white/10" autoPlay muted loop playsInline />
+            ) : (
+              <img src={bgUrl} alt="Preview" className="w-full max-w-md aspect-video object-cover border border-white/10" />
+            )}
+          </div>
+        )}
+
+        <button
+          type="button"
+          onClick={handleSave}
+          className="border border-white/40 px-8 py-3 text-sm tracking-[0.2em] uppercase hover:bg-white/10 transition-colors"
+        >
+          Save Background
+        </button>
+      </div>
+    </div>
+  );
+};
+
 export default Admin;
