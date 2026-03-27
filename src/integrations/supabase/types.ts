@@ -114,6 +114,27 @@ export type Database = {
           },
         ]
       }
+      site_settings: {
+        Row: {
+          hero_bg_type: string
+          hero_bg_url: string | null
+          id: string
+          updated_at: string | null
+        }
+        Insert: {
+          hero_bg_type?: string
+          hero_bg_url?: string | null
+          id?: string
+          updated_at?: string | null
+        }
+        Update: {
+          hero_bg_type?: string
+          hero_bg_url?: string | null
+          id?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           id: string
