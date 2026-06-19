@@ -22,7 +22,10 @@ type WorksProject = {
   link: string;
   display_order: number;
   image_url: string | null;
+  category: string;
 };
+
+const PROJECT_CATEGORIES = ["project", "hackathon", "experiment", "client"] as const;
 
 type AboutContent = {
   id: string;
@@ -537,6 +540,8 @@ const WorksTab = ({ projects, onAdd, onDelete, onUpdate, uploadImage }: {
   const [description, setDescription] = useState("");
   const [tags, setTags] = useState("");
   const [link, setLink] = useState("");
+  const [category, setCategory] = useState<string>("project");
+  const [customCategory, setCustomCategory] = useState("");
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
 
@@ -548,8 +553,9 @@ const WorksTab = ({ projects, onAdd, onDelete, onUpdate, uploadImage }: {
     if (imageFile) {
       imageUrl = await uploadImage(imageFile, "works");
     }
-    await onAdd({ title, description, tags: tags.split(",").map((t) => t.trim()).filter(Boolean), link, image_url: imageUrl });
-    setTitle(""); setDescription(""); setTags(""); setLink(""); setImageFile(null);
+    const finalCategory = (category === "__custom" ? customCategory.trim() : category) || "project";
+    await onAdd({ title, description, tags: tags.split(",").map((t) => t.trim()).filter(Boolean), link, image_url: imageUrl, category: finalCategory });
+    setTitle(""); setDescription(""); setTags(""); setLink(""); setImageFile(null); setCategory("project"); setCustomCategory("");
     setShowForm(false);
     setUploading(false);
   };
@@ -574,6 +580,19 @@ const WorksTab = ({ projects, onAdd, onDelete, onUpdate, uploadImage }: {
             className="w-full bg-transparent border border-white/20 px-4 py-3 text-sm text-white focus:border-white/50 outline-none" />
           <input type="text" placeholder="Tags (comma separated)" value={tags} onChange={(e) => setTags(e.target.value)}
             className="w-full bg-transparent border border-white/20 px-4 py-3 text-sm text-white focus:border-white/50 outline-none" />
+          <div className="flex gap-2">
+            <select value={category} onChange={(e) => setCategory(e.target.value)}
+              className="flex-1 bg-black border border-white/20 px-4 py-3 text-sm text-white focus:border-white/50 outline-none capitalize">
+              {PROJECT_CATEGORIES.map((c) => (
+                <option key={c} value={c} className="bg-black">{c}</option>
+              ))}
+              <option value="__custom" className="bg-black">Custom…</option>
+            </select>
+            {category === "__custom" && (
+              <input type="text" placeholder="Custom category" value={customCategory} onChange={(e) => setCustomCategory(e.target.value)}
+                className="flex-1 bg-transparent border border-white/20 px-4 py-3 text-sm text-white focus:border-white/50 outline-none" />
+            )}
+          </div>
           <input type="url" placeholder="Project URL" value={link} onChange={(e) => setLink(e.target.value)}
             className="w-full bg-transparent border border-white/20 px-4 py-3 text-sm text-white focus:border-white/50 outline-none" />
           <label className="flex items-center gap-2 border border-white/20 px-4 py-3 text-sm text-white/60 cursor-pointer hover:border-white/40 transition-colors">
