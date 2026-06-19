@@ -1,0 +1,1 @@
+ALTER TABLE public.works_projects ADD COLUMN IF NOT EXISTS category text NOT NULL DEFAULT 'project';
