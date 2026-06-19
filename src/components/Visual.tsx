@@ -1,6 +1,6 @@
 import { motion, useInView } from "framer-motion";
 import { useRef, useState, useEffect, useCallback } from "react";
-import { Camera, Heart, MessageSquare, Send } from "lucide-react";
+import { Camera, Heart, MessageSquare, Send, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 type VisualPhoto = {
@@ -32,7 +32,17 @@ const getSessionId = () => {
   return id;
 };
 
-const PhotoCard = ({ photo, index, isInView }: { photo: VisualPhoto; index: number; isInView: boolean }) => {
+const PhotoCard = ({
+  photo,
+  index,
+  isInView,
+  onOpen,
+}: {
+  photo: VisualPhoto;
+  index: number;
+  isInView: boolean;
+  onOpen: () => void;
+}) => {
   const [liked, setLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(0);
   const [comments, setComments] = useState<Comment[]>([]);
@@ -97,13 +107,17 @@ const PhotoCard = ({ photo, index, isInView }: { photo: VisualPhoto; index: numb
       animate={isInView ? { opacity: 1, y: 0 } : {}}
       transition={{ duration: 0.5, delay: 0.1 + index * 0.05 }}
     >
-      <div className="relative overflow-hidden group">
+      <div
+        className="relative overflow-hidden group cursor-pointer"
+        onClick={onOpen}
+      >
         <img
           src={photo.image_url}
           alt={photo.title}
           className="w-full aspect-square object-cover transition-transform duration-500 group-hover:scale-105"
           loading="lazy"
         />
+        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300" />
       </div>
 
       <div className="py-3 space-y-1">
@@ -172,11 +186,109 @@ const PhotoCard = ({ photo, index, isInView }: { photo: VisualPhoto; index: numb
   );
 };
 
+const Lightbox = ({
+  photos,
+  activeIndex,
+  onClose,
+  onNext,
+  onPrev,
+}: {
+  photos: VisualPhoto[];
+  activeIndex: number;
+  onClose: () => void;
+  onNext: () => void;
+  onPrev: () => void;
+}) => {
+  const activePhoto = photos[activeIndex];
+
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+      if (e.key === "ArrowRight") onNext();
+      if (e.key === "ArrowLeft") onPrev();
+    };
+    window.addEventListener("keydown", handleKey);
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", handleKey);
+      document.body.style.overflow = "";
+    };
+  }, [onClose, onNext, onPrev]);
+
+  return (
+    <motion.div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 backdrop-blur-sm"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      onClick={onClose}
+    >
+      <button
+        className="absolute top-4 right-4 z-50 p-2 text-white/60 hover:text-white transition-colors"
+        onClick={onClose}
+        aria-label="Close"
+      >
+        <X className="w-6 h-6" />
+      </button>
+
+      {photos.length > 1 && (
+        <>
+          <button
+            className="absolute left-4 top-1/2 -translate-y-1/2 z-50 p-2 text-white/60 hover:text-white transition-colors"
+            onClick={(e) => {
+              e.stopPropagation();
+              onPrev();
+            }}
+            aria-label="Previous"
+          >
+            <ChevronLeft className="w-8 h-8" />
+          </button>
+          <button
+            className="absolute right-4 top-1/2 -translate-y-1/2 z-50 p-2 text-white/60 hover:text-white transition-colors"
+            onClick={(e) => {
+              e.stopPropagation();
+              onNext();
+            }}
+            aria-label="Next"
+          >
+            <ChevronRight className="w-8 h-8" />
+          </button>
+        </>
+      )}
+
+      <div
+        className="relative max-w-[90vw] max-h-[90vh] flex flex-col items-center"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <img
+          src={activePhoto.image_url}
+          alt={activePhoto.title}
+          className="max-w-full max-h-[80vh] object-contain"
+        />
+        {(activePhoto.title || activePhoto.description) && (
+          <div className="mt-4 text-center max-w-xl px-4">
+            {activePhoto.title && (
+              <p className="text-white font-medium text-sm md:text-base">{activePhoto.title}</p>
+            )}
+            {activePhoto.description && (
+              <p className="text-white/50 text-xs md:text-sm mt-1">{activePhoto.description}</p>
+            )}
+          </div>
+        )}
+        <p className="text-white/30 text-xs mt-2">
+          {activeIndex + 1} / {photos.length}
+        </p>
+      </div>
+    </motion.div>
+  );
+};
+
 const Visual = () => {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-100px" });
   const [photos, setPhotos] = useState<VisualPhoto[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activeIndex, setActiveIndex] = useState<number | null>(null);
 
   useEffect(() => {
     supabase
@@ -189,6 +301,13 @@ const Visual = () => {
         setLoading(false);
       });
   }, []);
+
+  const openPhoto = (index: number) => setActiveIndex(index);
+  const closePhoto = () => setActiveIndex(null);
+  const nextPhoto = () =>
+    setActiveIndex((prev) => (prev === null ? null : prev === photos.length - 1 ? 0 : prev + 1));
+  const prevPhoto = () =>
+    setActiveIndex((prev) => (prev === null ? null : prev === 0 ? photos.length - 1 : prev - 1));
 
   return (
     <section id="visual" className="py-24 lg:py-32 bg-black text-white">
@@ -216,7 +335,13 @@ const Visual = () => {
         ) : photos.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
             {photos.map((photo, i) => (
-              <PhotoCard key={photo.id} photo={photo} index={i} isInView={isInView} />
+              <PhotoCard
+                key={photo.id}
+                photo={photo}
+                index={i}
+                isInView={isInView}
+                onOpen={() => openPhoto(i)}
+              />
             ))}
           </div>
         ) : (
@@ -232,6 +357,16 @@ const Visual = () => {
           </motion.div>
         )}
       </div>
+
+      {activeIndex !== null && (
+        <Lightbox
+          photos={photos}
+          activeIndex={activeIndex}
+          onClose={closePhoto}
+          onNext={nextPhoto}
+          onPrev={prevPhoto}
+        />
+      )}
     </section>
   );
 };
