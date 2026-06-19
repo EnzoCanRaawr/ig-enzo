@@ -191,6 +191,7 @@ export type Database = {
       }
       works_projects: {
         Row: {
+          category: string
           created_at: string
           description: string | null
           display_order: number
@@ -202,6 +203,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          category?: string
           created_at?: string
           description?: string | null
           display_order?: number
@@ -213,6 +215,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          category?: string
           created_at?: string
           description?: string | null
           display_order?: number
