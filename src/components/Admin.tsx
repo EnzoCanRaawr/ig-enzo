@@ -620,7 +620,10 @@ const WorksTab = ({ projects, onAdd, onDelete, onUpdate, uploadImage }: {
               <div className="min-w-0 flex-1">
                 <p className="text-sm text-white font-medium truncate">{String(i + 1).padStart(2, "0")} — {project.title}</p>
                 <p className="text-xs text-white/40 truncate">{project.description}</p>
-                <div className="flex gap-2 mt-1">
+                <div className="flex gap-2 mt-1 items-center flex-wrap">
+                  <span className="text-[10px] uppercase tracking-wider px-2 py-0.5 border border-white/20 text-white/60">
+                    {project.category || "project"}
+                  </span>
                   {project.tags?.map((tag) => (
                     <span key={tag} className="text-[10px] text-white/30 uppercase tracking-wider">{tag}</span>
                   ))}
@@ -628,6 +631,18 @@ const WorksTab = ({ projects, onAdd, onDelete, onUpdate, uploadImage }: {
               </div>
             </div>
             <div className="flex items-center gap-2 flex-shrink-0">
+              <select
+                value={project.category || "project"}
+                onChange={(e) => onUpdate(project.id, { category: e.target.value } as any)}
+                className="bg-black border border-white/20 px-2 py-1 text-[10px] uppercase tracking-wider text-white/70 focus:border-white/50 outline-none"
+              >
+                {PROJECT_CATEGORIES.map((c) => (
+                  <option key={c} value={c} className="bg-black">{c}</option>
+                ))}
+                {project.category && !PROJECT_CATEGORIES.includes(project.category as any) && (
+                  <option value={project.category} className="bg-black">{project.category}</option>
+                )}
+              </select>
               <label className="p-2 text-white/30 hover:text-white/60 transition-colors cursor-pointer">
                 <Image className="w-4 h-4" />
                 <input type="file" accept="image/*" onChange={(e) => e.target.files?.[0] && handleProjectImageUpload(project.id, e.target.files[0])} className="hidden" />
