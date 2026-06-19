@@ -1,5 +1,5 @@
 import { motion, useInView } from "framer-motion";
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect, useMemo } from "react";
 import { ExternalLink, Briefcase } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -11,6 +11,7 @@ type WorksProject = {
   link: string;
   display_order: number;
   image_url: string | null;
+  category: string;
 };
 
 const ProjectCard = ({ project, index }: { project: WorksProject; index: number }) => {
@@ -42,6 +43,11 @@ const ProjectCard = ({ project, index }: { project: WorksProject; index: number 
             />
           )}
           <div className="min-w-0">
+            <div className="flex items-center gap-3 mb-2 flex-wrap">
+              <span className="text-[10px] uppercase tracking-[0.2em] px-2 py-0.5 border border-white/20 text-white/60">
+                {project.category || "project"}
+              </span>
+            </div>
             <h3 className="text-2xl md:text-3xl lg:text-4xl font-display font-bold text-white group-hover:text-white/70 transition-colors">
               {project.title}
             </h3>
@@ -71,6 +77,7 @@ const Works = () => {
   const isHeaderInView = useInView(headerRef, { once: true, margin: "-100px" });
   const [projects, setProjects] = useState<WorksProject[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activeCategory, setActiveCategory] = useState<string>("all");
 
   useEffect(() => {
     supabase
@@ -83,12 +90,22 @@ const Works = () => {
       });
   }, []);
 
+  const categories = useMemo(() => {
+    const set = new Set<string>();
+    projects.forEach((p) => set.add(p.category || "project"));
+    return ["all", ...Array.from(set)];
+  }, [projects]);
+
+  const filtered = activeCategory === "all"
+    ? projects
+    : projects.filter((p) => (p.category || "project") === activeCategory);
+
   return (
     <section id="works" className="py-24 lg:py-32 bg-black text-white">
       <div className="max-w-6xl mx-auto px-8 md:px-12">
         <motion.div
           ref={headerRef}
-          className="mb-16"
+          className="mb-10"
           initial={{ opacity: 0, y: 30 }}
           animate={isHeaderInView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.6 }}
@@ -99,20 +116,38 @@ const Works = () => {
           </h2>
         </motion.div>
 
+        {categories.length > 2 && (
+          <div className="flex gap-2 mb-10 flex-wrap">
+            {categories.map((c) => (
+              <button
+                key={c}
+                onClick={() => setActiveCategory(c)}
+                className={`text-[10px] uppercase tracking-[0.2em] px-3 py-2 border transition-colors ${
+                  activeCategory === c
+                    ? "border-white text-white bg-white/10"
+                    : "border-white/20 text-white/50 hover:text-white hover:border-white/40"
+                }`}
+              >
+                {c}
+              </button>
+            ))}
+          </div>
+        )}
+
         {loading ? (
           <div className="text-center py-16">
             <p className="text-white/30 text-sm">Loading...</p>
           </div>
-        ) : projects.length > 0 ? (
+        ) : filtered.length > 0 ? (
           <div className="border-t border-white/10">
-            {projects.map((project, index) => (
+            {filtered.map((project, index) => (
               <ProjectCard key={project.id} project={project} index={index} />
             ))}
           </div>
         ) : (
           <div className="text-center py-16 border border-white/10">
             <Briefcase className="w-10 h-10 text-white/20 mx-auto mb-4" />
-            <p className="text-white/30 text-sm">Projects coming soon</p>
+            <p className="text-white/30 text-sm">No projects in this category yet</p>
           </div>
         )}
       </div>
