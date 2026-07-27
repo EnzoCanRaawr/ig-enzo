@@ -200,10 +200,30 @@ const Lightbox = ({
   onPrev: () => void;
 }) => {
   const activePhoto = photos[activeIndex];
+  const imgWrapRef = useRef<HTMLDivElement>(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  const toggleFullscreen = async () => {
+    try {
+      if (!document.fullscreenElement) {
+        await imgWrapRef.current?.requestFullscreen();
+      } else {
+        await document.exitFullscreen();
+      }
+    } catch (err) {
+      console.error("Fullscreen error:", err);
+    }
+  };
+
+  useEffect(() => {
+    const onFsChange = () => setIsFullscreen(!!document.fullscreenElement);
+    document.addEventListener("fullscreenchange", onFsChange);
+    return () => document.removeEventListener("fullscreenchange", onFsChange);
+  }, []);
 
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape" && !document.fullscreenElement) onClose();
       if (e.key === "ArrowRight") onNext();
       if (e.key === "ArrowLeft") onPrev();
     };
@@ -229,6 +249,17 @@ const Lightbox = ({
         aria-label="Close"
       >
         <X className="w-6 h-6" />
+      </button>
+
+      <button
+        className="absolute top-4 right-16 z-50 p-2 text-white/60 hover:text-white transition-colors"
+        onClick={(e) => {
+          e.stopPropagation();
+          toggleFullscreen();
+        }}
+        aria-label={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
+      >
+        {isFullscreen ? <Minimize2 className="w-5 h-5" /> : <Maximize2 className="w-5 h-5" />}
       </button>
 
       {photos.length > 1 && (
