@@ -160,7 +160,7 @@ const Music = () => {
             ))}
           </div>
         </div>
-      </ParallaxSection>
+      </section>
     </div>
   );
 };
