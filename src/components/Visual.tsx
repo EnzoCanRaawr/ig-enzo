@@ -1,6 +1,6 @@
-import { motion, useInView } from "framer-motion";
+import { motion, useInView, AnimatePresence } from "framer-motion";
 import { useRef, useState, useEffect, useCallback } from "react";
-import { Camera, Heart, MessageSquare, Send, X, ChevronLeft, ChevronRight, Maximize2, Minimize2 } from "lucide-react";
+import { Camera, Heart, MessageSquare, Send, X, ChevronLeft, ChevronRight, Maximize2, Minimize2, Play, Volume2, VolumeX } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 type VisualPhoto = {
@@ -11,6 +11,7 @@ type VisualPhoto = {
   display_order: number;
   is_enabled: boolean;
   comments_enabled: boolean;
+  media_type: string;
 };
 
 type Comment = {
@@ -32,73 +33,31 @@ const getSessionId = () => {
   return id;
 };
 
+const timeAgo = (iso: string) => {
+  const diff = (Date.now() - new Date(iso).getTime()) / 1000;
+  if (diff < 60) return "just now";
+  if (diff < 3600) return `${Math.floor(diff / 60)}m`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)}h`;
+  if (diff < 604800) return `${Math.floor(diff / 86400)}d`;
+  return new Date(iso).toLocaleDateString();
+};
+
 const PhotoCard = ({
   photo,
   index,
   isInView,
   onOpen,
+  likeCount,
+  commentCount,
 }: {
   photo: VisualPhoto;
   index: number;
   isInView: boolean;
   onOpen: () => void;
+  likeCount: number;
+  commentCount: number;
 }) => {
-  const [liked, setLiked] = useState(false);
-  const [likeCount, setLikeCount] = useState(0);
-  const [comments, setComments] = useState<Comment[]>([]);
-  const [showComments, setShowComments] = useState(false);
-  const [commentName, setCommentName] = useState("");
-  const [commentText, setCommentText] = useState("");
-  const sessionId = getSessionId();
-
-  const fetchReactions = useCallback(async () => {
-    const { data, count } = await supabase
-      .from("photo_reactions")
-      .select("*", { count: "exact" })
-      .eq("photo_id", photo.id)
-      .eq("reaction_type", "like");
-    setLikeCount(count || 0);
-    const userLiked = (data || []).some((r: any) => r.session_id === sessionId);
-    setLiked(userLiked);
-  }, [photo.id, sessionId]);
-
-  const fetchComments = useCallback(async () => {
-    const { data } = await supabase
-      .from("photo_comments")
-      .select("*")
-      .eq("photo_id", photo.id)
-      .order("created_at", { ascending: true });
-    if (data) setComments(data as unknown as Comment[]);
-  }, [photo.id]);
-
-  useEffect(() => {
-    fetchReactions();
-    if (photo.comments_enabled) fetchComments();
-  }, [fetchReactions, fetchComments, photo.comments_enabled]);
-
-  const toggleLike = async () => {
-    if (liked) {
-      await supabase.from("photo_reactions").delete()
-        .eq("photo_id", photo.id).eq("session_id", sessionId).eq("reaction_type", "like");
-    } else {
-      await supabase.from("photo_reactions").insert({
-        photo_id: photo.id, session_id: sessionId, reaction_type: "like",
-      } as any);
-    }
-    fetchReactions();
-  };
-
-  const submitComment = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!commentText.trim()) return;
-    await supabase.from("photo_comments").insert({
-      photo_id: photo.id,
-      author_name: commentName.trim() || "Anonymous",
-      content: commentText.trim(),
-    } as any);
-    setCommentText("");
-    fetchComments();
-  };
+  const isVideo = photo.media_type === "video";
 
   return (
     <motion.div
@@ -108,79 +67,45 @@ const PhotoCard = ({
       transition={{ duration: 0.5, delay: 0.1 + index * 0.05 }}
     >
       <div
-        className="relative overflow-hidden group cursor-pointer"
+        className="relative overflow-hidden group cursor-pointer bg-black"
         onClick={onOpen}
       >
-        <img
-          src={photo.image_url}
-          alt={photo.title}
-          className="w-full aspect-square object-cover transition-transform duration-500 group-hover:scale-105"
-          loading="lazy"
-        />
-        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300" />
+        {isVideo ? (
+          <>
+            <video
+              src={photo.image_url}
+              className="w-full aspect-square object-cover transition-transform duration-500 group-hover:scale-105"
+              muted
+              playsInline
+              preload="metadata"
+            />
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <div className="w-12 h-12 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center">
+                <Play className="w-5 h-5 text-white fill-current ml-0.5" />
+              </div>
+            </div>
+          </>
+        ) : (
+          <img
+            src={photo.image_url}
+            alt={photo.title}
+            className="w-full aspect-square object-cover transition-transform duration-500 group-hover:scale-105"
+            loading="lazy"
+          />
+        )}
+        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors duration-300 flex items-center justify-center gap-6 opacity-0 group-hover:opacity-100">
+          <span className="flex items-center gap-1.5 text-white text-sm font-semibold">
+            <Heart className="w-4 h-4 fill-current" /> {likeCount}
+          </span>
+          <span className="flex items-center gap-1.5 text-white text-sm font-semibold">
+            <MessageSquare className="w-4 h-4 fill-current" /> {commentCount}
+          </span>
+        </div>
       </div>
 
       <div className="py-3 space-y-1">
         {photo.title && <p className="text-sm text-white font-medium">{photo.title}</p>}
         {photo.description && <p className="text-xs text-white/40">{photo.description}</p>}
-
-        <div className="flex items-center gap-4 pt-2">
-          <button onClick={toggleLike} className={`flex items-center gap-1.5 transition-colors ${liked ? "text-red-400" : "text-white/30 hover:text-white/60"}`}>
-            <Heart className={`w-4 h-4 ${liked ? "fill-current" : ""}`} />
-            <span className="text-xs">{likeCount}</span>
-          </button>
-          {photo.comments_enabled && (
-            <button onClick={() => setShowComments(!showComments)} className="flex items-center gap-1.5 text-white/30 hover:text-white/60 transition-colors">
-              <MessageSquare className="w-4 h-4" />
-              <span className="text-xs">{comments.length}</span>
-            </button>
-          )}
-        </div>
-
-        {photo.comments_enabled && showComments && (
-          <div className="pt-3 space-y-3 border-t border-white/10 mt-3">
-            {comments.map((comment) => (
-              <div key={comment.id} className="space-y-1.5">
-                <div className="space-y-0.5">
-                  <p className="text-xs">
-                    <span className="text-white/60 font-medium">{comment.author_name}</span>
-                    <span className="text-white/20 ml-2">{new Date(comment.created_at).toLocaleDateString()}</span>
-                  </p>
-                  <p className="text-xs text-white/40">{comment.content}</p>
-                </div>
-                {comment.admin_reply && (
-                  <div className="ml-4 pl-3 border-l border-white/15">
-                    <p className="text-[10px] text-white/25 mb-0.5">
-                      Admin · {comment.admin_reply_at ? new Date(comment.admin_reply_at).toLocaleDateString() : ""}
-                    </p>
-                    <p className="text-xs text-white/50">{comment.admin_reply}</p>
-                  </div>
-                )}
-              </div>
-            ))}
-            <form onSubmit={submitComment} className="space-y-2">
-              <input
-                type="text"
-                placeholder="Your name (optional)"
-                value={commentName}
-                onChange={(e) => setCommentName(e.target.value)}
-                className="w-full bg-transparent border border-white/10 px-3 py-2 text-xs text-white focus:border-white/30 outline-none"
-              />
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  placeholder="Add a comment..."
-                  value={commentText}
-                  onChange={(e) => setCommentText(e.target.value)}
-                  className="flex-1 bg-transparent border border-white/10 px-3 py-2 text-xs text-white focus:border-white/30 outline-none"
-                />
-                <button type="submit" className="p-2 text-white/30 hover:text-white/60 transition-colors">
-                  <Send className="w-3.5 h-3.5" />
-                </button>
-              </div>
-            </form>
-          </div>
-        )}
       </div>
     </motion.div>
   );
@@ -192,21 +117,84 @@ const Lightbox = ({
   onClose,
   onNext,
   onPrev,
+  onCountsChange,
 }: {
   photos: VisualPhoto[];
   activeIndex: number;
   onClose: () => void;
   onNext: () => void;
   onPrev: () => void;
+  onCountsChange: () => void;
 }) => {
   const activePhoto = photos[activeIndex];
-  const imgWrapRef = useRef<HTMLDivElement>(null);
+  const isVideo = activePhoto.media_type === "video";
+  const mediaWrapRef = useRef<HTMLDivElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [muted, setMuted] = useState(true);
+  const [liked, setLiked] = useState(false);
+  const [likeCount, setLikeCount] = useState(0);
+  const [comments, setComments] = useState<Comment[]>([]);
+  const [commentName, setCommentName] = useState("");
+  const [commentText, setCommentText] = useState("");
+  const sessionId = getSessionId();
+
+  const fetchReactions = useCallback(async () => {
+    const { data, count } = await supabase
+      .from("photo_reactions")
+      .select("*", { count: "exact" })
+      .eq("photo_id", activePhoto.id)
+      .eq("reaction_type", "like");
+    setLikeCount(count || 0);
+    setLiked((data || []).some((r: any) => r.session_id === sessionId));
+  }, [activePhoto.id, sessionId]);
+
+  const fetchComments = useCallback(async () => {
+    const { data } = await supabase
+      .from("photo_comments")
+      .select("*")
+      .eq("photo_id", activePhoto.id)
+      .order("created_at", { ascending: true });
+    if (data) setComments(data as unknown as Comment[]);
+  }, [activePhoto.id]);
+
+  useEffect(() => {
+    fetchReactions();
+    if (activePhoto.comments_enabled) fetchComments();
+    else setComments([]);
+  }, [fetchReactions, fetchComments, activePhoto.comments_enabled]);
+
+  const toggleLike = async () => {
+    if (liked) {
+      await supabase.from("photo_reactions").delete()
+        .eq("photo_id", activePhoto.id).eq("session_id", sessionId).eq("reaction_type", "like");
+    } else {
+      await supabase.from("photo_reactions").insert({
+        photo_id: activePhoto.id, session_id: sessionId, reaction_type: "like",
+      } as any);
+    }
+    await fetchReactions();
+    onCountsChange();
+  };
+
+  const submitComment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!commentText.trim()) return;
+    await supabase.from("photo_comments").insert({
+      photo_id: activePhoto.id,
+      author_name: commentName.trim() || "Anonymous",
+      content: commentText.trim(),
+    } as any);
+    setCommentText("");
+    await fetchComments();
+    onCountsChange();
+  };
 
   const toggleFullscreen = async () => {
     try {
       if (!document.fullscreenElement) {
-        await imgWrapRef.current?.requestFullscreen();
+        await mediaWrapRef.current?.requestFullscreen();
       } else {
         await document.exitFullscreen();
       }
@@ -243,74 +231,198 @@ const Lightbox = ({
       exit={{ opacity: 0 }}
       onClick={onClose}
     >
+      {/* Close */}
       <button
-        className="absolute top-4 right-4 z-50 p-2 text-white/60 hover:text-white transition-colors"
+        className="absolute top-4 right-4 z-[60] p-2 text-white/70 hover:text-white transition-colors"
         onClick={onClose}
         aria-label="Close"
       >
         <X className="w-6 h-6" />
       </button>
 
-      <button
-        className="absolute top-4 right-16 z-50 p-2 text-white/60 hover:text-white transition-colors"
-        onClick={(e) => {
-          e.stopPropagation();
-          toggleFullscreen();
-        }}
-        aria-label={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
-      >
-        {isFullscreen ? <Minimize2 className="w-5 h-5" /> : <Maximize2 className="w-5 h-5" />}
-      </button>
-
+      {/* Prev / Next */}
       {photos.length > 1 && (
         <>
           <button
-            className="absolute left-4 top-1/2 -translate-y-1/2 z-50 p-2 text-white/60 hover:text-white transition-colors"
-            onClick={(e) => {
-              e.stopPropagation();
-              onPrev();
-            }}
+            className="absolute left-4 top-1/2 -translate-y-1/2 z-[60] p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"
+            onClick={(e) => { e.stopPropagation(); onPrev(); }}
             aria-label="Previous"
           >
-            <ChevronLeft className="w-8 h-8" />
+            <ChevronLeft className="w-6 h-6" />
           </button>
           <button
-            className="absolute right-4 top-1/2 -translate-y-1/2 z-50 p-2 text-white/60 hover:text-white transition-colors"
-            onClick={(e) => {
-              e.stopPropagation();
-              onNext();
-            }}
+            className="absolute right-4 top-1/2 -translate-y-1/2 z-[60] p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"
+            onClick={(e) => { e.stopPropagation(); onNext(); }}
             aria-label="Next"
           >
-            <ChevronRight className="w-8 h-8" />
+            <ChevronRight className="w-6 h-6" />
           </button>
         </>
       )}
 
+      {/* Instagram-style panel */}
       <div
-        className="relative max-w-[90vw] max-h-[90vh] flex flex-col items-center"
+        className="relative w-full max-w-6xl h-full md:h-[90vh] md:max-h-[900px] mx-4 md:mx-8 bg-neutral-950 md:rounded-lg overflow-hidden flex flex-col md:flex-row shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <div ref={imgWrapRef} className="flex items-center justify-center bg-black">
-          <img
-            src={activePhoto.image_url}
-            alt={activePhoto.title}
-            className={isFullscreen ? "w-screen h-screen object-contain" : "max-w-full max-h-[80vh] object-contain"}
-          />
+        {/* Media side */}
+        <div
+          ref={mediaWrapRef}
+          className="relative flex-1 min-h-0 bg-black flex items-center justify-center md:border-r md:border-white/10"
+        >
+          {isVideo ? (
+            <>
+              <video
+                ref={videoRef}
+                key={activePhoto.id}
+                src={activePhoto.image_url}
+                className={isFullscreen ? "w-screen h-screen object-contain" : "max-w-full max-h-full w-full h-full object-contain"}
+                controls={false}
+                autoPlay
+                loop
+                muted={muted}
+                playsInline
+                onClick={() => {
+                  const v = videoRef.current;
+                  if (!v) return;
+                  if (v.paused) v.play(); else v.pause();
+                }}
+              />
+              <button
+                onClick={(e) => { e.stopPropagation(); setMuted((m) => !m); }}
+                className="absolute bottom-4 right-4 p-2 rounded-full bg-black/60 hover:bg-black/80 text-white transition-colors"
+                aria-label={muted ? "Unmute" : "Mute"}
+              >
+                {muted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+              </button>
+            </>
+          ) : (
+            <img
+              src={activePhoto.image_url}
+              alt={activePhoto.title}
+              className={isFullscreen ? "w-screen h-screen object-contain" : "max-w-full max-h-full object-contain"}
+            />
+          )}
+
+          <button
+            onClick={(e) => { e.stopPropagation(); toggleFullscreen(); }}
+            className="absolute top-4 left-4 p-2 rounded-full bg-black/60 hover:bg-black/80 text-white transition-colors"
+            aria-label={isFullscreen ? "Exit fullscreen" : "Fullscreen"}
+          >
+            {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+          </button>
         </div>
-        {(activePhoto.title || activePhoto.description) && (
-          <div className="mt-4 text-center max-w-xl px-4">
-            {activePhoto.title && (
-              <p className="text-white font-medium text-sm md:text-base">{activePhoto.title}</p>
-            )}
+
+        {/* Sidebar */}
+        <aside className="w-full md:w-[400px] md:flex-shrink-0 flex flex-col bg-neutral-950 border-t md:border-t-0 border-white/10 max-h-[45vh] md:max-h-none">
+          {/* Header */}
+          <div className="px-5 py-4 border-b border-white/10 flex items-center gap-3">
+            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-pink-500 via-red-500 to-yellow-500 flex items-center justify-center text-white text-xs font-bold">
+              E
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm text-white font-semibold truncate">enzo</p>
+              {activePhoto.title && (
+                <p className="text-xs text-white/50 truncate">{activePhoto.title}</p>
+              )}
+            </div>
+          </div>
+
+          {/* Caption + Comments */}
+          <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
             {activePhoto.description && (
-              <p className="text-white/50 text-xs md:text-sm mt-1">{activePhoto.description}</p>
+              <div className="flex gap-3">
+                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-pink-500 via-red-500 to-yellow-500 flex-shrink-0" />
+                <p className="text-sm text-white/90 leading-relaxed">
+                  <span className="font-semibold mr-2">enzo</span>
+                  {activePhoto.description}
+                </p>
+              </div>
+            )}
+
+            {activePhoto.comments_enabled ? (
+              comments.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-10 text-center">
+                  <p className="text-white/70 text-lg font-semibold">No comments yet.</p>
+                  <p className="text-white/40 text-xs mt-1">Start the conversation.</p>
+                </div>
+              ) : (
+                comments.map((comment) => (
+                  <div key={comment.id} className="flex gap-3">
+                    <div className="w-8 h-8 rounded-full bg-white/10 flex-shrink-0 flex items-center justify-center text-white/70 text-xs font-semibold">
+                      {comment.author_name.charAt(0).toUpperCase()}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm text-white/90 leading-relaxed">
+                        <span className="font-semibold mr-2">{comment.author_name}</span>
+                        {comment.content}
+                      </p>
+                      <p className="text-[11px] text-white/40 mt-1">{timeAgo(comment.created_at)}</p>
+                      {comment.admin_reply && (
+                        <div className="mt-2 ml-2 pl-3 border-l border-white/15">
+                          <p className="text-sm text-white/80 leading-relaxed">
+                            <span className="font-semibold mr-2">enzo</span>
+                            {comment.admin_reply}
+                          </p>
+                          {comment.admin_reply_at && (
+                            <p className="text-[11px] text-white/40 mt-1">{timeAgo(comment.admin_reply_at)}</p>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))
+              )
+            ) : (
+              <p className="text-white/40 text-xs text-center py-6">Comments are disabled for this post.</p>
             )}
           </div>
-        )}
-        <p className="text-white/30 text-xs mt-2">
-          {activeIndex + 1} / {photos.length}
-        </p>
+
+          {/* Actions */}
+          <div className="border-t border-white/10 px-5 pt-3">
+            <div className="flex items-center gap-4 mb-1">
+              <button onClick={toggleLike} aria-label="Like" className="transition-transform active:scale-90">
+                <Heart className={`w-6 h-6 ${liked ? "text-red-500 fill-current" : "text-white hover:text-white/70"}`} />
+              </button>
+              {activePhoto.comments_enabled && (
+                <MessageSquare className="w-6 h-6 text-white" />
+              )}
+            </div>
+            <p className="text-sm text-white font-semibold">{likeCount} {likeCount === 1 ? "like" : "likes"}</p>
+            <p className="text-[11px] text-white/40 mt-0.5 uppercase tracking-wider">
+              {activeIndex + 1} / {photos.length}
+            </p>
+          </div>
+
+          {/* Composer */}
+          {activePhoto.comments_enabled && (
+            <form onSubmit={submitComment} className="border-t border-white/10 px-5 py-3 space-y-2">
+              <input
+                type="text"
+                placeholder="Your name (optional)"
+                value={commentName}
+                onChange={(e) => setCommentName(e.target.value)}
+                className="w-full bg-transparent text-xs text-white placeholder:text-white/30 outline-none"
+              />
+              <div className="flex items-center gap-2 border-t border-white/5 pt-2">
+                <input
+                  type="text"
+                  placeholder="Add a comment..."
+                  value={commentText}
+                  onChange={(e) => setCommentText(e.target.value)}
+                  className="flex-1 bg-transparent text-sm text-white placeholder:text-white/40 outline-none"
+                />
+                <button
+                  type="submit"
+                  disabled={!commentText.trim()}
+                  className="text-sm font-semibold text-sky-400 hover:text-sky-300 disabled:text-sky-400/30 transition-colors"
+                >
+                  Post
+                </button>
+              </div>
+            </form>
+          )}
+        </aside>
       </div>
     </motion.div>
   );
@@ -322,6 +434,21 @@ const Visual = () => {
   const [photos, setPhotos] = useState<VisualPhoto[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
+  const [likeCounts, setLikeCounts] = useState<Record<string, number>>({});
+  const [commentCounts, setCommentCounts] = useState<Record<string, number>>({});
+
+  const fetchCounts = useCallback(async () => {
+    const [{ data: reactions }, { data: comments }] = await Promise.all([
+      supabase.from("photo_reactions").select("photo_id").eq("reaction_type", "like"),
+      supabase.from("photo_comments").select("photo_id"),
+    ]);
+    const lc: Record<string, number> = {};
+    (reactions || []).forEach((r: any) => { lc[r.photo_id] = (lc[r.photo_id] || 0) + 1; });
+    setLikeCounts(lc);
+    const cc: Record<string, number> = {};
+    (comments || []).forEach((c: any) => { cc[c.photo_id] = (cc[c.photo_id] || 0) + 1; });
+    setCommentCounts(cc);
+  }, []);
 
   useEffect(() => {
     supabase
@@ -333,7 +460,8 @@ const Visual = () => {
         if (data) setPhotos(data as unknown as VisualPhoto[]);
         setLoading(false);
       });
-  }, []);
+    fetchCounts();
+  }, [fetchCounts]);
 
   const openPhoto = (index: number) => setActiveIndex(index);
   const closePhoto = () => setActiveIndex(null);
@@ -374,6 +502,8 @@ const Visual = () => {
                 index={i}
                 isInView={isInView}
                 onOpen={() => openPhoto(i)}
+                likeCount={likeCounts[photo.id] || 0}
+                commentCount={commentCounts[photo.id] || 0}
               />
             ))}
           </div>
@@ -391,15 +521,18 @@ const Visual = () => {
         )}
       </div>
 
-      {activeIndex !== null && (
-        <Lightbox
-          photos={photos}
-          activeIndex={activeIndex}
-          onClose={closePhoto}
-          onNext={nextPhoto}
-          onPrev={prevPhoto}
-        />
-      )}
+      <AnimatePresence>
+        {activeIndex !== null && (
+          <Lightbox
+            photos={photos}
+            activeIndex={activeIndex}
+            onClose={closePhoto}
+            onNext={nextPhoto}
+            onPrev={prevPhoto}
+            onCountsChange={fetchCounts}
+          />
+        )}
+      </AnimatePresence>
     </section>
   );
 };
