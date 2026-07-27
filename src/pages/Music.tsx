@@ -91,7 +91,7 @@ Than only me and you`,
 const Music = () => {
   return (
     <div className="min-h-screen bg-background text-foreground relative overflow-hidden">
-      <ParallaxSection className="pt-28 pb-20 px-6">
+      <section className="pt-28 pb-20 px-6">
         <div className="container mx-auto max-w-4xl">
           <Link
             to="/"
