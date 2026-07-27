@@ -4,10 +4,11 @@ import { X } from "lucide-react";
 import ThemeToggle from "./ThemeToggle";
 
 const navItems = [
-  { label: "Services", href: "#services" },
-  { label: "Works", href: "#works" },
-  { label: "About", href: "#about" },
-  { label: "Contact", href: "#contact" },
+  { label: "Services", href: "/#services" },
+  { label: "Works", href: "/#works" },
+  { label: "Music", href: "/music" },
+  { label: "About", href: "/#about" },
+  { label: "Contact", href: "/#contact" },
 ];
 
 const Navbar = () => {
