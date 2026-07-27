@@ -12,6 +12,7 @@ type VisualPhoto = {
   display_order: number;
   is_enabled: boolean;
   comments_enabled: boolean;
+  media_type: string;
 };
 
 type WorksProject = {
@@ -149,8 +150,9 @@ const Admin = () => {
     setUploading(true);
     const url = await uploadImage(file, "visual");
     if (url) {
-      await supabase.from("visual_photos").insert({ title, description, image_url: url, display_order: photos.length } as any);
-      toast.success("Photo added");
+      const mediaType = file.type.startsWith("video/") ? "video" : "image";
+      await supabase.from("visual_photos").insert({ title, description, image_url: url, display_order: photos.length, media_type: mediaType } as any);
+      toast.success(`${mediaType === "video" ? "Video" : "Photo"} added`);
       fetchData();
     }
     setUploading(false);
@@ -400,16 +402,16 @@ const VisualTab = ({ photos, onAdd, onDelete, onToggle, uploading, commentCounts
   return (
     <div>
       <form onSubmit={handleSubmit} className="border border-white/10 p-6 mb-8 space-y-4">
-        <h3 className="text-xs text-white/40 uppercase tracking-[0.2em] mb-4">Add Photo</h3>
-        <input type="text" placeholder="Photo title" value={title} onChange={(e) => setTitle(e.target.value)}
+        <h3 className="text-xs text-white/40 uppercase tracking-[0.2em] mb-4">Add Photo or Video</h3>
+        <input type="text" placeholder="Title" value={title} onChange={(e) => setTitle(e.target.value)}
           className="w-full bg-transparent border border-white/20 px-4 py-3 text-sm text-white focus:border-white/50 outline-none" />
         <input type="text" placeholder="Description" value={description} onChange={(e) => setDescription(e.target.value)}
           className="w-full bg-transparent border border-white/20 px-4 py-3 text-sm text-white focus:border-white/50 outline-none" />
         <div className="flex items-center gap-4">
           <label className="flex items-center gap-2 border border-white/20 px-4 py-3 text-sm text-white/60 cursor-pointer hover:border-white/40 transition-colors flex-1">
-            <Upload className="w-4 h-4" />
-            {file ? file.name : "Choose image..."}
-            <input type="file" accept="image/*" onChange={(e) => setFile(e.target.files?.[0] || null)} className="hidden" />
+            {file?.type.startsWith("video/") ? <Video className="w-4 h-4" /> : <Upload className="w-4 h-4" />}
+            {file ? file.name : "Choose image or video..."}
+            <input type="file" accept="image/*,video/*" onChange={(e) => setFile(e.target.files?.[0] || null)} className="hidden" />
           </label>
           <button type="submit" disabled={uploading} className="border border-white/40 px-6 py-3 text-sm tracking-[0.15em] uppercase hover:bg-white/10 transition-colors disabled:opacity-30">
             {uploading ? "Uploading..." : "Add"}
