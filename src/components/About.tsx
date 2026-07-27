@@ -3,6 +3,13 @@ import { useRef, useMemo, useState, useEffect } from "react";
 import signature from "@/assets/signature.png";
 import defaultProfilePhoto from "@/assets/enzo-profile.jpg";
 import { supabase } from "@/integrations/supabase/client";
+import { Github, Instagram, Facebook } from "lucide-react";
+
+const socialLinks = [
+  { icon: Github, href: "https://github.com/zoneclx", label: "GitHub" },
+  { icon: Instagram, href: "https://instagram.com/enzogimena.shawn", label: "Instagram" },
+  { icon: Facebook, href: "https://facebook.com/enzodegimena.shawn", label: "Facebook" },
+];
 
 const defaultSkillCategories = [
   { title: "Languages", skills: ["JavaScript", "TypeScript", "Python", "HTML/CSS"] },
