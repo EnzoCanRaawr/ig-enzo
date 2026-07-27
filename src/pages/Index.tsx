@@ -184,7 +184,6 @@ const Index = () => {
             transition={{ duration: 0.5 }}
           >
             {renderSection()}
-            <Footer />
           </motion.div>
         )}
       </AnimatePresence>
