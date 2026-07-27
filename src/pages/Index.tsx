@@ -5,7 +5,6 @@ import Works from "@/components/Works";
 import About from "@/components/About";
 import Visual from "@/components/Visual";
 import Admin from "@/components/Admin";
-import Footer from "@/components/Footer";
 import bannerImage from "@/assets/banner.jpeg";
 import { Github, Instagram, Facebook } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -185,7 +184,6 @@ const Index = () => {
             transition={{ duration: 0.5 }}
           >
             {renderSection()}
-            <Footer />
           </motion.div>
         )}
       </AnimatePresence>
