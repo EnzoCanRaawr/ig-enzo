@@ -1,6 +1,6 @@
 import { motion, useInView } from "framer-motion";
 import { useRef, useState, useEffect, useCallback } from "react";
-import { Camera, Heart, MessageSquare, Send, X, ChevronLeft, ChevronRight } from "lucide-react";
+import { Camera, Heart, MessageSquare, Send, X, ChevronLeft, ChevronRight, Maximize2, Minimize2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 type VisualPhoto = {
