@@ -291,11 +291,13 @@ const Lightbox = ({
         className="relative max-w-[90vw] max-h-[90vh] flex flex-col items-center"
         onClick={(e) => e.stopPropagation()}
       >
-        <img
-          src={activePhoto.image_url}
-          alt={activePhoto.title}
-          className="max-w-full max-h-[80vh] object-contain"
-        />
+        <div ref={imgWrapRef} className="flex items-center justify-center bg-black">
+          <img
+            src={activePhoto.image_url}
+            alt={activePhoto.title}
+            className={isFullscreen ? "w-screen h-screen object-contain" : "max-w-full max-h-[80vh] object-contain"}
+          />
+        </div>
         {(activePhoto.title || activePhoto.description) && (
           <div className="mt-4 text-center max-w-xl px-4">
             {activePhoto.title && (
