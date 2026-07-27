@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { ArrowLeft, Music as MusicIcon } from "lucide-react";
-import ParallaxSection from "@/components/ParallaxSection";
+
 
 type Track = {
   title: string;
