@@ -84,6 +84,20 @@ const About = () => {
               <h2 className="text-lg md:text-xl font-display font-bold text-white tracking-wide">Shawn Enzo J. Gimena</h2>
               <p className="text-xs text-white/40 tracking-[0.2em] uppercase">{tagline}</p>
               <p className="text-xs text-white/30 mt-2">For collaborations, {contactEmail}</p>
+              <div className="flex items-center justify-center gap-4 mt-4">
+                {socialLinks.map((link) => (
+                  <a
+                    key={link.label}
+                    href={link.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-8 h-8 flex items-center justify-center rounded-full border border-white/10 text-white/30 hover:text-white/70 hover:border-white/30 transition-all duration-300"
+                    aria-label={link.label}
+                  >
+                    <link.icon className="w-3.5 h-3.5" />
+                  </a>
+                ))}
+              </div>
             </div>
           </motion.div>
 
