@@ -425,7 +425,11 @@ const VisualTab = ({ photos, onAdd, onDelete, onToggle, uploading, commentCounts
           return (
             <div key={photo.id} className={`border p-4 transition-colors ${photo.is_enabled ? "border-white/10" : "border-white/5 opacity-50"}`}>
               <div className="flex gap-4 items-start">
-                <img src={photo.image_url} alt={photo.title} className="w-20 h-20 object-cover flex-shrink-0" />
+                {photo.media_type === "video" ? (
+                  <video src={photo.image_url} className="w-20 h-20 object-cover flex-shrink-0 bg-black" muted />
+                ) : (
+                  <img src={photo.image_url} alt={photo.title} className="w-20 h-20 object-cover flex-shrink-0" />
+                )}
                 <div className="flex-1 min-w-0">
                   <p className="text-sm text-white font-medium truncate">{photo.title || "Untitled"}</p>
                   <p className="text-xs text-white/40 truncate mt-0.5">{photo.description || "No description"}</p>
