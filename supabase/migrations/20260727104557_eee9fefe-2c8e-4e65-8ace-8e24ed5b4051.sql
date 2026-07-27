@@ -1,0 +1,1 @@
+ALTER TABLE public.visual_photos ADD COLUMN IF NOT EXISTS media_type text NOT NULL DEFAULT 'image';

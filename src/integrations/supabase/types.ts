@@ -162,6 +162,7 @@ export type Database = {
           id: string
           image_url: string
           is_enabled: boolean
+          media_type: string
           title: string
           updated_at: string
         }
@@ -173,6 +174,7 @@ export type Database = {
           id?: string
           image_url: string
           is_enabled?: boolean
+          media_type?: string
           title?: string
           updated_at?: string
         }
@@ -184,6 +186,7 @@ export type Database = {
           id?: string
           image_url?: string
           is_enabled?: boolean
+          media_type?: string
           title?: string
           updated_at?: string
         }
