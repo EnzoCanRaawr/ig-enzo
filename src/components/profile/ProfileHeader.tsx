@@ -71,7 +71,7 @@ const ProfileHeader = ({
               <Mail className="w-3.5 h-3.5" /> Message
             </a>
             <a
-              href="#music"
+              href="/music"
               className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white text-xs font-semibold transition-colors"
             >
               <Music2 className="w-3.5 h-3.5" /> Music
