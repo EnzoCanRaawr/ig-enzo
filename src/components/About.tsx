@@ -108,7 +108,7 @@ const About = () => {
             <img
               src={signature}
               alt="Signature of Shawn Enzo J. Gimena"
-              className="h-20 md:h-24 w-auto mt-4 opacity-80 mix-blend-multiply dark:mix-blend-screen pointer-events-none select-none"
+              className="h-20 md:h-24 w-auto mt-4 opacity-90 invert dark:invert-0 pointer-events-none select-none"
               draggable={false}
               onContextMenu={(e) => e.preventDefault()}
             />
