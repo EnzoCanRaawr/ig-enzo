@@ -17,30 +17,39 @@ export type Database = {
       about_content: {
         Row: {
           bio_paragraphs: string[] | null
+          display_name: string
           email: string | null
           id: string
           profile_image_url: string | null
           skills: Json | null
           tagline: string | null
           updated_at: string
+          username: string
+          website_url: string | null
         }
         Insert: {
           bio_paragraphs?: string[] | null
+          display_name?: string
           email?: string | null
           id?: string
           profile_image_url?: string | null
           skills?: Json | null
           tagline?: string | null
           updated_at?: string
+          username?: string
+          website_url?: string | null
         }
         Update: {
           bio_paragraphs?: string[] | null
+          display_name?: string
           email?: string | null
           id?: string
           profile_image_url?: string | null
           skills?: Json | null
           tagline?: string | null
           updated_at?: string
+          username?: string
+          website_url?: string | null
         }
         Relationships: []
       }
@@ -163,6 +172,11 @@ export type Database = {
           image_url: string
           is_enabled: boolean
           media_type: string
+          media_urls: string[]
+          music_platform: string | null
+          music_title: string | null
+          music_url: string | null
+          post_kind: string
           title: string
           updated_at: string
         }
@@ -175,6 +189,11 @@ export type Database = {
           image_url: string
           is_enabled?: boolean
           media_type?: string
+          media_urls?: string[]
+          music_platform?: string | null
+          music_title?: string | null
+          music_url?: string | null
+          post_kind?: string
           title?: string
           updated_at?: string
         }
@@ -187,6 +206,11 @@ export type Database = {
           image_url?: string
           is_enabled?: boolean
           media_type?: string
+          media_urls?: string[]
+          music_platform?: string | null
+          music_title?: string | null
+          music_url?: string | null
+          post_kind?: string
           title?: string
           updated_at?: string
         }
