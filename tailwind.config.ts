@@ -15,9 +15,21 @@ export default {
     extend: {
       fontFamily: {
         display: ['Syne', 'sans-serif'],
+        editorial: ['Urbanist', 'sans-serif'],
+        epilogue: ['Epilogue', 'system-ui', 'sans-serif'],
         body: ['Inter', 'system-ui', 'sans-serif'],
       },
       colors: {
+        paper: {
+          DEFAULT: "hsl(var(--paper))",
+          alt: "hsl(var(--paper-2))",
+        },
+        ink: {
+          DEFAULT: "hsl(var(--ink))",
+          soft: "hsl(var(--ink-soft))",
+          muted: "hsl(var(--ink-muted))",
+        },
+        rule: "hsl(var(--rule))",
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
