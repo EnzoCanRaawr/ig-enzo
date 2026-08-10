@@ -1,190 +1,184 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { useState, useEffect, useRef } from "react";
-import ParallaxSection from "@/components/ParallaxSection";
+import { useState, useEffect, useCallback, useMemo } from "react";
+import { Grid3X3, Clapperboard, Briefcase, UserRound } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import defaultAvatar from "@/assets/enzo-profile.jpg";
+import ProfileHeader from "@/components/profile/ProfileHeader";
+import PostGrid from "@/components/profile/PostGrid";
+import PostLightbox from "@/components/profile/PostLightbox";
+import { Post, isVideoPost } from "@/components/profile/postTypes";
 import Works from "@/components/Works";
 import About from "@/components/About";
-import Visual from "@/components/Visual";
 import Admin from "@/components/Admin";
-import bannerImage from "@/assets/banner.jpeg";
-import { Github, Instagram, Facebook } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 
-const navItems = [
-  { label: "main.", href: "#" },
-  { label: "works.", href: "#works" },
-  { label: "about.", href: "#about" },
-  { label: "visual.", href: "#visual" },
-];
+type ProfileData = {
+  bio_paragraphs: string[];
+  profile_image_url: string;
+  email: string;
+  tagline: string;
+  username: string;
+  display_name: string;
+  website_url: string | null;
+};
 
-const socialLinks = [
-  { icon: Github, href: "https://github.com/zoneclx", label: "GitHub" },
-  { icon: Instagram, href: "https://instagram.com/enzogimena.shawn", label: "Instagram" },
-  { icon: Facebook, href: "https://facebook.com/enzodegimena.shawn", label: "Facebook" },
-];
+const tabs = [
+  { id: "posts", label: "Posts", icon: Grid3X3 },
+  { id: "reels", label: "Reels", icon: Clapperboard },
+  { id: "works", label: "Works", icon: Briefcase },
+  { id: "about", label: "About", icon: UserRound },
+] as const;
+
+type TabId = (typeof tabs)[number]["id"];
 
 const Index = () => {
-  const [activeSection, setActiveSection] = useState("");
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const [heroBg, setHeroBg] = useState<{ type: "image" | "video"; url: string | null }>({ type: "image", url: null });
+  const [hash, setHash] = useState("");
+  const [tab, setTab] = useState<TabId>("posts");
+  const [profile, setProfile] = useState<ProfileData | null>(null);
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [likeCounts, setLikeCounts] = useState<Record<string, number>>({});
+  const [commentCounts, setCommentCounts] = useState<Record<string, number>>({});
+  const [activeIndex, setActiveIndex] = useState<number | null>(null);
 
   useEffect(() => {
-    supabase.from("site_settings").select("*").limit(1).single().then(({ data }) => {
-      if (data) setHeroBg({ type: (data as any).hero_bg_type || "image", url: (data as any).hero_bg_url || null });
-    });
-  }, []);
-
-  useEffect(() => {
-    const handleHash = () => setActiveSection(window.location.hash);
+    const handleHash = () => setHash(window.location.hash);
     handleHash();
     window.addEventListener("hashchange", handleHash);
     return () => window.removeEventListener("hashchange", handleHash);
   }, []);
 
-  const renderSection = () => {
-    const section = (() => {
-      switch (activeSection) {
-        case "#works":
-          return <Works />;
-        case "#about":
-          return <About />;
-        case "#visual":
-          return <Visual />;
-        case "#admin":
-          return <Admin />;
-        default:
-          return null;
-      }
-    })();
+  const fetchCounts = useCallback(async () => {
+    const [{ data: reactions }, { data: comments }] = await Promise.all([
+      supabase.from("photo_reactions").select("photo_id").eq("reaction_type", "like"),
+      supabase.from("photo_comments").select("photo_id"),
+    ]);
+    const lc: Record<string, number> = {};
+    (reactions || []).forEach((r: any) => { lc[r.photo_id] = (lc[r.photo_id] || 0) + 1; });
+    setLikeCounts(lc);
+    const cc: Record<string, number> = {};
+    (comments || []).forEach((c: any) => { cc[c.photo_id] = (cc[c.photo_id] || 0) + 1; });
+    setCommentCounts(cc);
+  }, []);
 
-    if (activeSection === "#admin") return section;
+  useEffect(() => {
+    supabase.from("about_content").select("*").limit(1).single().then(({ data }) => {
+      if (data) setProfile(data as unknown as ProfileData);
+    });
+    supabase
+      .from("visual_photos")
+      .select("*")
+      .eq("is_enabled", true)
+      .order("display_order")
+      .then(({ data }) => {
+        if (data) setPosts(data as unknown as Post[]);
+        setLoading(false);
+      });
+    fetchCounts();
+  }, [fetchCounts]);
 
-    return section ? (
-      <ParallaxSection scrollRef={scrollContainerRef as React.RefObject<HTMLElement>}>
-        {section}
-      </ParallaxSection>
-    ) : null;
-  };
+  const totals = useMemo(() => ({
+    likes: Object.values(likeCounts).reduce((a, b) => a + b, 0),
+    comments: Object.values(commentCounts).reduce((a, b) => a + b, 0),
+  }), [likeCounts, commentCounts]);
 
-  const isHome = !activeSection || activeSection === "#";
+  const reels = useMemo(() => posts.filter(isVideoPost), [posts]);
+  const visiblePosts = tab === "reels" ? reels : posts;
+
+  const openPost = (index: number) => setActiveIndex(index);
+  const closePost = () => setActiveIndex(null);
+  const nextPost = () =>
+    setActiveIndex((p) => (p === null ? null : p === visiblePosts.length - 1 ? 0 : p + 1));
+  const prevPost = () =>
+    setActiveIndex((p) => (p === null ? null : p === 0 ? visiblePosts.length - 1 : p - 1));
+
+  if (hash === "#admin") return <Admin />;
+
+  const username = profile?.username || "enzo";
+  const displayName = profile?.display_name || "Shawn Enzo J. Gimena";
+  const avatarUrl = profile?.profile_image_url || defaultAvatar;
 
   return (
-    <div className="h-screen w-screen overflow-hidden relative bg-black">
-      {/* Background media */}
-      {heroBg.type === "video" && heroBg.url ? (
-        <video
-          autoPlay muted loop playsInline
-          className="absolute inset-0 w-full h-full object-cover transition-opacity duration-700"
-          style={{ opacity: isHome ? 1 : 0.08 }}
-          src={heroBg.url}
+    <div className="min-h-screen bg-black text-white">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 pb-24">
+        <ProfileHeader
+          username={username}
+          displayName={displayName}
+          tagline={profile?.tagline || "Developer. Student. Creator."}
+          bio={profile?.bio_paragraphs?.length ? profile.bio_paragraphs : ["Student developer building things on the web."]}
+          avatarUrl={avatarUrl}
+          email={profile?.email || "enzogimena.shawn@gmail.com"}
+          websiteUrl={profile?.website_url}
+          postCount={posts.length}
+          likeCount={totals.likes}
+          commentCount={totals.comments}
         />
-      ) : (
-        <div
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-opacity duration-700"
-          style={{
-            backgroundImage: `url(${heroBg.url || bannerImage})`,
-            opacity: isHome ? 1 : 0.08,
-          }}
-        />
-      )}
-      <div className="absolute inset-0 bg-black/40" />
 
-      {/* Navigation */}
-      <motion.nav
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8, delay: 0.2 }}
-        className="fixed top-0 left-0 right-0 z-50"
-      >
-        <div className="flex items-center justify-between px-4 sm:px-8 md:px-12 py-4 sm:py-6">
-          <ul className="flex items-center gap-3 sm:gap-6 md:gap-8">
-            {navItems.map((item, i) => (
-              <motion.li
-                key={item.label}
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 + i * 0.1 }}
-              >
-                <a
-                  href={item.href}
-                  className={`text-xs sm:text-sm tracking-wide transition-colors ${
-                    (item.href === "#" && isHome) || item.href === activeSection
-                      ? "text-white"
-                      : "text-white/50 hover:text-white"
-                  }`}
-                >
-                  {item.label}
-                </a>
-              </motion.li>
-            ))}
-          </ul>
+        {/* Tabs */}
+        <nav className="border-t border-white/10 flex items-center justify-center gap-8 sm:gap-14">
+          {tabs.map((t) => (
+            <button
+              key={t.id}
+              onClick={() => { setTab(t.id); setActiveIndex(null); }}
+              className={`relative -mt-px flex items-center gap-2 py-4 text-[11px] uppercase tracking-[0.2em] transition-colors ${
+                tab === t.id ? "text-white" : "text-white/40 hover:text-white/70"
+              }`}
+            >
+              <span
+                className={`absolute top-0 left-0 right-0 h-px transition-colors ${tab === t.id ? "bg-white" : "bg-transparent"}`}
+              />
+              <t.icon className="w-4 h-4" strokeWidth={1.5} />
+              <span className="hidden sm:inline">{t.label}</span>
+            </button>
+          ))}
+        </nav>
 
-        {/* Social links removed from navbar */}
-        </div>
-      </motion.nav>
-
-      {/* Content */}
-      <AnimatePresence mode="wait">
-        {isHome ? (
+        {/* Panels */}
+        <AnimatePresence mode="wait">
           <motion.div
-            key="home"
-            className="relative z-10 flex flex-col h-full px-4 sm:px-6"
-            initial={{ opacity: 0, y: 30 }}
+            key={tab}
+            initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.6 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.3 }}
+            className="pt-6"
           >
-            {/* Name positioned top-right */}
-            <div className="flex flex-col items-end text-right mt-20 sm:mt-24 mr-2 sm:mr-4 md:mr-12">
-              <h1 className="text-base sm:text-xl md:text-2xl font-display font-normal text-white tracking-[0.3em] sm:tracking-[0.45em] uppercase mb-2 sm:mb-3">
-                Enzo Gimena
-              </h1>
-              <p className="text-[10px] sm:text-xs md:text-sm text-white/70 tracking-[0.15em] sm:tracking-[0.25em] uppercase italic">
-                Student. Developer. Creating. Learning.
-              </p>
-              <div className="flex items-center justify-end gap-3 mt-4">
-                {socialLinks.map((link) => (
-                  <a
-                    key={link.label}
-                    href={link.href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-white/50 hover:text-white transition-colors"
-                    aria-label={link.label}
-                  >
-                    <link.icon className="w-4 h-4" />
-                  </a>
-                ))}
+            {tab === "posts" || tab === "reels" ? (
+              loading ? (
+                <div className="py-24 text-center text-white/30 text-sm">Loading...</div>
+              ) : (
+                <PostGrid
+                  posts={visiblePosts}
+                  onOpen={openPost}
+                  likeCounts={likeCounts}
+                  commentCounts={commentCounts}
+                  emptyLabel={tab === "reels" ? "No reels yet" : "No posts yet"}
+                />
+              )
+            ) : tab === "works" ? (
+              <div className="-mx-4 sm:-mx-6">
+                <Works />
               </div>
-            </div>
-
-            {/* Discover button centered */}
-            <div className="flex-1 flex items-center justify-center">
-              <a
-                href="#works"
-                className="px-8 sm:px-10 py-2.5 sm:py-3 border border-white/50 text-white/90 text-xs sm:text-sm tracking-[0.2em] uppercase hover:bg-white/10 hover:border-white transition-all duration-300"
-              >
-                Discover
-              </a>
-            </div>
-
-            <div className="pb-4 sm:pb-6 text-center">
-              <p className="text-[10px] sm:text-xs text-white/40 tracking-wider">
-                © {new Date().getFullYear()} Shawn Enzo J. Gimena. All Rights Reserved.
-              </p>
-            </div>
+            ) : (
+              <div className="-mx-4 sm:-mx-6">
+                <About />
+              </div>
+            )}
           </motion.div>
-        ) : (
-          <motion.div
-            key={activeSection}
-            ref={scrollContainerRef}
-            className="relative z-10 h-full overflow-y-auto"
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.5 }}
-          >
-            {renderSection()}
-          </motion.div>
+        </AnimatePresence>
+      </div>
+
+      <AnimatePresence>
+        {activeIndex !== null && visiblePosts[activeIndex] && (
+          <PostLightbox
+            posts={visiblePosts}
+            activeIndex={activeIndex}
+            username={username}
+            avatarUrl={avatarUrl}
+            onClose={closePost}
+            onNext={nextPost}
+            onPrev={prevPost}
+            onCountsChange={fetchCounts}
+          />
         )}
       </AnimatePresence>
     </div>
