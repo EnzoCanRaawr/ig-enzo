@@ -146,17 +146,40 @@ const Admin = () => {
     return data.publicUrl;
   };
 
-  const handleAddPhoto = async (file: File, title: string, description: string) => {
+  const handleAddPhoto = async (
+    files: File[],
+    title: string,
+    description: string,
+    musicUrl: string,
+    musicTitle: string,
+  ) => {
     setUploading(true);
-    const url = await uploadImage(file, "visual");
-    if (url) {
-      const mediaType = file.type.startsWith("video/") ? "video" : "image";
-      await supabase.from("visual_photos").insert({ title, description, image_url: url, display_order: photos.length, media_type: mediaType } as any);
-      toast.success(`${mediaType === "video" ? "Video" : "Photo"} added`);
+    const urls: string[] = [];
+    for (const file of files) {
+      const url = await uploadImage(file, "visual");
+      if (url) urls.push(url);
+    }
+    if (urls.length > 0) {
+      const mediaType = files[0].type.startsWith("video/") ? "video" : "image";
+      const postKind = mediaType === "video" ? "reel" : urls.length > 1 ? "carousel" : "photo";
+      await supabase.from("visual_photos").insert({
+        title,
+        description,
+        image_url: urls[0],
+        media_urls: urls,
+        display_order: photos.length,
+        media_type: mediaType,
+        post_kind: postKind,
+        music_url: musicUrl.trim() || null,
+        music_title: musicTitle.trim() || null,
+        music_platform: musicUrl.trim() ? detectPlatform(musicUrl.trim()) : null,
+      } as any);
+      toast.success(`${mediaType === "video" ? "Reel" : postKind === "carousel" ? "Carousel" : "Photo"} posted`);
       fetchData();
     }
     setUploading(false);
   };
+
 
   const handleDeletePhoto = async (id: string, imageUrl: string) => {
     const path = imageUrl.split("/portfolio-media/")[1];
