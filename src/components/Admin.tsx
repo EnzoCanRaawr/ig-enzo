@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { Camera, Briefcase, User, Upload, Trash2, Plus, LogOut, GripVertical, LayoutDashboard, Eye, EyeOff, MessageSquare, Heart, Reply, Image, Settings, Video } from "lucide-react";
 import { toast } from "sonner";
+import { detectPlatform } from "@/lib/music";
 
 type VisualPhoto = {
   id: string;
@@ -146,17 +147,40 @@ const Admin = () => {
     return data.publicUrl;
   };
 
-  const handleAddPhoto = async (file: File, title: string, description: string) => {
+  const handleAddPhoto = async (
+    files: File[],
+    title: string,
+    description: string,
+    musicUrl: string,
+    musicTitle: string,
+  ) => {
     setUploading(true);
-    const url = await uploadImage(file, "visual");
-    if (url) {
-      const mediaType = file.type.startsWith("video/") ? "video" : "image";
-      await supabase.from("visual_photos").insert({ title, description, image_url: url, display_order: photos.length, media_type: mediaType } as any);
-      toast.success(`${mediaType === "video" ? "Video" : "Photo"} added`);
+    const urls: string[] = [];
+    for (const file of files) {
+      const url = await uploadImage(file, "visual");
+      if (url) urls.push(url);
+    }
+    if (urls.length > 0) {
+      const mediaType = files[0].type.startsWith("video/") ? "video" : "image";
+      const postKind = mediaType === "video" ? "reel" : urls.length > 1 ? "carousel" : "photo";
+      await supabase.from("visual_photos").insert({
+        title,
+        description,
+        image_url: urls[0],
+        media_urls: urls,
+        display_order: photos.length,
+        media_type: mediaType,
+        post_kind: postKind,
+        music_url: musicUrl.trim() || null,
+        music_title: musicTitle.trim() || null,
+        music_platform: musicUrl.trim() ? detectPlatform(musicUrl.trim()) : null,
+      } as any);
+      toast.success(`${mediaType === "video" ? "Reel" : postKind === "carousel" ? "Carousel" : "Photo"} posted`);
       fetchData();
     }
     setUploading(false);
   };
+
 
   const handleDeletePhoto = async (id: string, imageUrl: string) => {
     const path = imageUrl.split("/portfolio-media/")[1];
@@ -367,7 +391,7 @@ const OverviewTab = ({ photos, projects, aboutData, totalComments, totalReaction
 // Visual Tab
 const VisualTab = ({ photos, onAdd, onDelete, onToggle, uploading, commentCounts, reactionCounts, allComments, onReply }: {
   photos: VisualPhoto[];
-  onAdd: (file: File, title: string, description: string) => Promise<void>;
+  onAdd: (files: File[], title: string, description: string, musicUrl: string, musicTitle: string) => Promise<void>;
   onDelete: (id: string, imageUrl: string) => Promise<void>;
   onToggle: (id: string, field: "is_enabled" | "comments_enabled", value: boolean) => Promise<void>;
   uploading: boolean;
@@ -378,18 +402,22 @@ const VisualTab = ({ photos, onAdd, onDelete, onToggle, uploading, commentCounts
 }) => {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [file, setFile] = useState<File | null>(null);
+  const [files, setFiles] = useState<File[]>([]);
+  const [musicUrl, setMusicUrl] = useState("");
+  const [musicTitle, setMusicTitle] = useState("");
   const [expandedPhoto, setExpandedPhoto] = useState<string | null>(null);
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
   const [replyText, setReplyText] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!file) return toast.error("Select an image");
-    await onAdd(file, title, description);
+    if (files.length === 0) return toast.error("Select at least one image or video");
+    await onAdd(files, title, description, musicUrl, musicTitle);
     setTitle("");
     setDescription("");
-    setFile(null);
+    setMusicUrl("");
+    setMusicTitle("");
+    setFiles([]);
   };
 
   const handleReply = async (commentId: string) => {
@@ -402,16 +430,24 @@ const VisualTab = ({ photos, onAdd, onDelete, onToggle, uploading, commentCounts
   return (
     <div>
       <form onSubmit={handleSubmit} className="border border-white/10 p-6 mb-8 space-y-4">
-        <h3 className="text-xs text-white/40 uppercase tracking-[0.2em] mb-4">Add Photo or Video</h3>
+        <h3 className="text-xs text-white/40 uppercase tracking-[0.2em] mb-4">New Post — photo, carousel, reel or photo + music</h3>
         <input type="text" placeholder="Title" value={title} onChange={(e) => setTitle(e.target.value)}
           className="w-full bg-transparent border border-white/20 px-4 py-3 text-sm text-white focus:border-white/50 outline-none" />
         <input type="text" placeholder="Description" value={description} onChange={(e) => setDescription(e.target.value)}
           className="w-full bg-transparent border border-white/20 px-4 py-3 text-sm text-white focus:border-white/50 outline-none" />
+        <div className="grid sm:grid-cols-2 gap-4">
+          <input type="url" placeholder="Music link (YouTube / Spotify / SoundCloud)" value={musicUrl} onChange={(e) => setMusicUrl(e.target.value)}
+            className="w-full bg-transparent border border-white/20 px-4 py-3 text-sm text-white focus:border-white/50 outline-none" />
+          <input type="text" placeholder="Track name (shown on the audio ribbon)" value={musicTitle} onChange={(e) => setMusicTitle(e.target.value)}
+            className="w-full bg-transparent border border-white/20 px-4 py-3 text-sm text-white focus:border-white/50 outline-none" />
+        </div>
         <div className="flex items-center gap-4">
           <label className="flex items-center gap-2 border border-white/20 px-4 py-3 text-sm text-white/60 cursor-pointer hover:border-white/40 transition-colors flex-1">
-            {file?.type.startsWith("video/") ? <Video className="w-4 h-4" /> : <Upload className="w-4 h-4" />}
-            {file ? file.name : "Choose image or video..."}
-            <input type="file" accept="image/*,video/*" onChange={(e) => setFile(e.target.files?.[0] || null)} className="hidden" />
+            {files[0]?.type.startsWith("video/") ? <Video className="w-4 h-4" /> : <Upload className="w-4 h-4" />}
+            {files.length === 0
+              ? "Choose image(s) or a video..."
+              : files.length === 1 ? files[0].name : `${files.length} images (carousel)`}
+            <input type="file" multiple accept="image/*,video/*" onChange={(e) => setFiles(Array.from(e.target.files || []))} className="hidden" />
           </label>
           <button type="submit" disabled={uploading} className="border border-white/40 px-6 py-3 text-sm tracking-[0.15em] uppercase hover:bg-white/10 transition-colors disabled:opacity-30">
             {uploading ? "Uploading..." : "Add"}
