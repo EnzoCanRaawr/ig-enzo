@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Github, Instagram, Facebook, Link as LinkIcon, Mail, Music2 } from "lucide-react";
+import { Github, Instagram, Facebook, Link as LinkIcon, Mail } from "lucide-react";
 
 const socialLinks = [
   { icon: Github, href: "https://github.com/zoneclx", label: "GitHub" },
@@ -69,12 +69,6 @@ const ProfileHeader = ({
               className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-sky-500 hover:bg-sky-400 text-white text-xs font-semibold transition-colors"
             >
               <Mail className="w-3.5 h-3.5" /> Message
-            </a>
-            <a
-              href="/music"
-              className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white text-xs font-semibold transition-colors"
-            >
-              <Music2 className="w-3.5 h-3.5" /> Music
             </a>
           </div>
 

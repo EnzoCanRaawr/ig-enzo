@@ -6,6 +6,7 @@ import defaultAvatar from "@/assets/enzo-profile.jpg";
 import ProfileHeader from "@/components/profile/ProfileHeader";
 import PostGrid from "@/components/profile/PostGrid";
 import PostLightbox from "@/components/profile/PostLightbox";
+import StoryBar from "@/components/profile/StoryBar";
 import { Post, isVideoPost } from "@/components/profile/postTypes";
 import Works from "@/components/Works";
 import About from "@/components/About";
@@ -112,6 +113,10 @@ const Index = () => {
           likeCount={totals.likes}
           commentCount={totals.comments}
         />
+
+        <StoryBar username={username} avatarUrl={avatarUrl} />
+
+
 
         {/* Tabs */}
         <nav className="border-t border-white/10 flex items-center justify-center gap-8 sm:gap-14">
