@@ -790,11 +790,31 @@ const AboutTab = ({ data, onSave, uploadImage }: {
         </div>
       </div>
 
+      <div className="grid sm:grid-cols-2 gap-4">
+        <div>
+          <label className="text-xs text-white/40 uppercase tracking-[0.2em] block mb-2">Username</label>
+          <input type="text" value={usernameVal} onChange={(e) => setUsernameVal(e.target.value)} placeholder="enzo"
+            className="w-full bg-transparent border border-white/20 px-4 py-3 text-sm text-white focus:border-white/50 outline-none" />
+        </div>
+        <div>
+          <label className="text-xs text-white/40 uppercase tracking-[0.2em] block mb-2">Display Name</label>
+          <input type="text" value={displayNameVal} onChange={(e) => setDisplayNameVal(e.target.value)} placeholder="Shawn Enzo J. Gimena"
+            className="w-full bg-transparent border border-white/20 px-4 py-3 text-sm text-white focus:border-white/50 outline-none" />
+        </div>
+      </div>
+
+      <div>
+        <label className="text-xs text-white/40 uppercase tracking-[0.2em] block mb-2">Website Link</label>
+        <input type="url" value={websiteVal} onChange={(e) => setWebsiteVal(e.target.value)} placeholder="https://..."
+          className="w-full bg-transparent border border-white/20 px-4 py-3 text-sm text-white focus:border-white/50 outline-none" />
+      </div>
+
       <div>
         <label className="text-xs text-white/40 uppercase tracking-[0.2em] block mb-2">Tagline</label>
         <input type="text" value={tagline} onChange={(e) => setTagline(e.target.value)} placeholder="Developer. Student. Creator."
           className="w-full bg-transparent border border-white/20 px-4 py-3 text-sm text-white focus:border-white/50 outline-none" />
       </div>
+
 
       <div>
         <label className="text-xs text-white/40 uppercase tracking-[0.2em] block mb-2">Email</label>
