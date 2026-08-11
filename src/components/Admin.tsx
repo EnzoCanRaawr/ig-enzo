@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Camera, Briefcase, User, Upload, Trash2, Plus, LogOut, GripVertical, LayoutDashboard, Eye, EyeOff, MessageSquare, Heart, Reply, Image, Settings, Video } from "lucide-react";
 import { toast } from "sonner";
 import { detectPlatform } from "@/lib/music";
+import StoriesTab from "@/components/admin/StoriesTab";
 
 type VisualPhoto = {
   id: string;
@@ -36,6 +37,9 @@ type AboutContent = {
   profile_image_url: string;
   email: string;
   tagline: string;
+  username?: string;
+  display_name?: string;
+  website_url?: string | null;
 };
 
 type Comment = {
