@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
-import { Camera, Briefcase, User, Upload, Trash2, Plus, LogOut, GripVertical, LayoutDashboard, Eye, EyeOff, MessageSquare, Heart, Reply, Image, Settings, Video } from "lucide-react";
+import { Camera, Briefcase, User, Upload, Trash2, Plus, LogOut, GripVertical, LayoutDashboard, Eye, EyeOff, MessageSquare, Heart, Reply, Image, Settings, Video, Clock } from "lucide-react";
 import { toast } from "sonner";
 import { detectPlatform } from "@/lib/music";
 import StoriesTab from "@/components/admin/StoriesTab";
@@ -60,7 +60,7 @@ const Admin = () => {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isSignup, setIsSignup] = useState(false);
-  const [activeTab, setActiveTab] = useState<"overview" | "visual" | "works" | "about" | "settings">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "visual" | "stories" | "works" | "about" | "settings">("overview");
   const [siteSettings, setSiteSettings] = useState<{ id: string; hero_bg_type: string; hero_bg_url: string | null } | null>(null);
 
   const [photos, setPhotos] = useState<VisualPhoto[]>([]);
@@ -293,6 +293,7 @@ const Admin = () => {
             { key: "visual" as const, label: "Visual", icon: Camera },
             { key: "works" as const, label: "Works", icon: Briefcase },
             { key: "about" as const, label: "About", icon: User },
+            { key: "stories" as const, label: "Stories", icon: Clock },
             { key: "settings" as const, label: "Settings", icon: Settings },
           ].map((tab) => (
             <button key={tab.key} onClick={() => setActiveTab(tab.key)}
@@ -319,6 +320,7 @@ const Admin = () => {
         )}
         {activeTab === "works" && <WorksTab projects={projects} onAdd={handleAddProject} onDelete={handleDeleteProject} onUpdate={handleUpdateProject} uploadImage={uploadImage} />}
         {activeTab === "about" && <AboutTab data={aboutData} onSave={handleSaveAbout} uploadImage={uploadImage} />}
+        {activeTab === "stories" && <StoriesTab uploadImage={uploadImage} />}
         {activeTab === "settings" && <SettingsTab settings={siteSettings} uploadImage={uploadImage} onSaved={fetchData} />}
       </div>
     </section>
