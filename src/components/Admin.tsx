@@ -1,9 +1,10 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
-import { Camera, Briefcase, User, Upload, Trash2, Plus, LogOut, GripVertical, LayoutDashboard, Eye, EyeOff, MessageSquare, Heart, Reply, Image, Settings, Video } from "lucide-react";
+import { Camera, Briefcase, User, Upload, Trash2, Plus, LogOut, GripVertical, LayoutDashboard, Eye, EyeOff, MessageSquare, Heart, Reply, Image, Settings, Video, Clock } from "lucide-react";
 import { toast } from "sonner";
 import { detectPlatform } from "@/lib/music";
+import StoriesTab from "@/components/admin/StoriesTab";
 
 type VisualPhoto = {
   id: string;
@@ -36,6 +37,9 @@ type AboutContent = {
   profile_image_url: string;
   email: string;
   tagline: string;
+  username?: string;
+  display_name?: string;
+  website_url?: string | null;
 };
 
 type Comment = {
@@ -56,7 +60,7 @@ const Admin = () => {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isSignup, setIsSignup] = useState(false);
-  const [activeTab, setActiveTab] = useState<"overview" | "visual" | "works" | "about" | "settings">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "visual" | "stories" | "works" | "about" | "settings">("overview");
   const [siteSettings, setSiteSettings] = useState<{ id: string; hero_bg_type: string; hero_bg_url: string | null } | null>(null);
 
   const [photos, setPhotos] = useState<VisualPhoto[]>([]);
@@ -289,6 +293,7 @@ const Admin = () => {
             { key: "visual" as const, label: "Visual", icon: Camera },
             { key: "works" as const, label: "Works", icon: Briefcase },
             { key: "about" as const, label: "About", icon: User },
+            { key: "stories" as const, label: "Stories", icon: Clock },
             { key: "settings" as const, label: "Settings", icon: Settings },
           ].map((tab) => (
             <button key={tab.key} onClick={() => setActiveTab(tab.key)}
@@ -315,6 +320,7 @@ const Admin = () => {
         )}
         {activeTab === "works" && <WorksTab projects={projects} onAdd={handleAddProject} onDelete={handleDeleteProject} onUpdate={handleUpdateProject} uploadImage={uploadImage} />}
         {activeTab === "about" && <AboutTab data={aboutData} onSave={handleSaveAbout} uploadImage={uploadImage} />}
+        {activeTab === "stories" && <StoriesTab uploadImage={uploadImage} />}
         {activeTab === "settings" && <SettingsTab settings={siteSettings} uploadImage={uploadImage} onSaved={fetchData} />}
       </div>
     </section>
@@ -716,6 +722,9 @@ const AboutTab = ({ data, onSave, uploadImage }: {
   const [bio, setBio] = useState("");
   const [emailVal, setEmailVal] = useState("");
   const [tagline, setTagline] = useState("");
+  const [usernameVal, setUsernameVal] = useState("");
+  const [displayNameVal, setDisplayNameVal] = useState("");
+  const [websiteVal, setWebsiteVal] = useState("");
   const [skills, setSkills] = useState<{ title: string; skills: string[] }[]>([]);
   const [profileUrl, setProfileUrl] = useState("");
   const [uploading, setUploading] = useState(false);
@@ -726,6 +735,9 @@ const AboutTab = ({ data, onSave, uploadImage }: {
       setBio(data.bio_paragraphs?.join("\n\n") || "");
       setEmailVal(data.email || "");
       setTagline(data.tagline || "");
+      setUsernameVal(data.username || "");
+      setDisplayNameVal(data.display_name || "");
+      setWebsiteVal(data.website_url || "");
       setSkills(data.skills || []);
       setProfileUrl(data.profile_image_url || "");
       setInitialized(true);
@@ -734,7 +746,16 @@ const AboutTab = ({ data, onSave, uploadImage }: {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await onSave({ bio_paragraphs: bio.split("\n\n").filter(Boolean), email: emailVal, tagline, skills: skills as any, profile_image_url: profileUrl });
+    await onSave({
+      bio_paragraphs: bio.split("\n\n").map((p) => p.trim()).filter(Boolean),
+      email: emailVal,
+      tagline,
+      skills: skills as any,
+      profile_image_url: profileUrl,
+      username: usernameVal || "enzo",
+      display_name: displayNameVal || "Shawn Enzo J. Gimena",
+      website_url: websiteVal || null,
+    });
   };
 
   const handleProfileUpload = async (file: File) => {
@@ -769,11 +790,31 @@ const AboutTab = ({ data, onSave, uploadImage }: {
         </div>
       </div>
 
+      <div className="grid sm:grid-cols-2 gap-4">
+        <div>
+          <label className="text-xs text-white/40 uppercase tracking-[0.2em] block mb-2">Username</label>
+          <input type="text" value={usernameVal} onChange={(e) => setUsernameVal(e.target.value)} placeholder="enzo"
+            className="w-full bg-transparent border border-white/20 px-4 py-3 text-sm text-white focus:border-white/50 outline-none" />
+        </div>
+        <div>
+          <label className="text-xs text-white/40 uppercase tracking-[0.2em] block mb-2">Display Name</label>
+          <input type="text" value={displayNameVal} onChange={(e) => setDisplayNameVal(e.target.value)} placeholder="Shawn Enzo J. Gimena"
+            className="w-full bg-transparent border border-white/20 px-4 py-3 text-sm text-white focus:border-white/50 outline-none" />
+        </div>
+      </div>
+
+      <div>
+        <label className="text-xs text-white/40 uppercase tracking-[0.2em] block mb-2">Website Link</label>
+        <input type="url" value={websiteVal} onChange={(e) => setWebsiteVal(e.target.value)} placeholder="https://..."
+          className="w-full bg-transparent border border-white/20 px-4 py-3 text-sm text-white focus:border-white/50 outline-none" />
+      </div>
+
       <div>
         <label className="text-xs text-white/40 uppercase tracking-[0.2em] block mb-2">Tagline</label>
         <input type="text" value={tagline} onChange={(e) => setTagline(e.target.value)} placeholder="Developer. Student. Creator."
           className="w-full bg-transparent border border-white/20 px-4 py-3 text-sm text-white focus:border-white/50 outline-none" />
       </div>
+
 
       <div>
         <label className="text-xs text-white/40 uppercase tracking-[0.2em] block mb-2">Email</label>
