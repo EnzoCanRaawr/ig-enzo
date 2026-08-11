@@ -722,6 +722,9 @@ const AboutTab = ({ data, onSave, uploadImage }: {
   const [bio, setBio] = useState("");
   const [emailVal, setEmailVal] = useState("");
   const [tagline, setTagline] = useState("");
+  const [usernameVal, setUsernameVal] = useState("");
+  const [displayNameVal, setDisplayNameVal] = useState("");
+  const [websiteVal, setWebsiteVal] = useState("");
   const [skills, setSkills] = useState<{ title: string; skills: string[] }[]>([]);
   const [profileUrl, setProfileUrl] = useState("");
   const [uploading, setUploading] = useState(false);
@@ -732,6 +735,9 @@ const AboutTab = ({ data, onSave, uploadImage }: {
       setBio(data.bio_paragraphs?.join("\n\n") || "");
       setEmailVal(data.email || "");
       setTagline(data.tagline || "");
+      setUsernameVal(data.username || "");
+      setDisplayNameVal(data.display_name || "");
+      setWebsiteVal(data.website_url || "");
       setSkills(data.skills || []);
       setProfileUrl(data.profile_image_url || "");
       setInitialized(true);
@@ -740,7 +746,16 @@ const AboutTab = ({ data, onSave, uploadImage }: {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await onSave({ bio_paragraphs: bio.split("\n\n").filter(Boolean), email: emailVal, tagline, skills: skills as any, profile_image_url: profileUrl });
+    await onSave({
+      bio_paragraphs: bio.split("\n\n").map((p) => p.trim()).filter(Boolean),
+      email: emailVal,
+      tagline,
+      skills: skills as any,
+      profile_image_url: profileUrl,
+      username: usernameVal || "enzo",
+      display_name: displayNameVal || "Shawn Enzo J. Gimena",
+      website_url: websiteVal || null,
+    });
   };
 
   const handleProfileUpload = async (file: File) => {
