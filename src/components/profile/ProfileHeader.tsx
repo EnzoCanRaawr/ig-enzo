@@ -83,7 +83,7 @@ const ProfileHeader = ({
           <div className="text-center md:text-left space-y-1">
             <p className="text-sm text-white font-semibold">{displayName}</p>
             <p className="text-xs text-white/50 uppercase tracking-[0.2em]">{tagline}</p>
-            {bio.slice(0, 2).map((line, i) => (
+            {bio.map((line, i) => (
               <p key={i} className="text-sm text-white/70 leading-relaxed max-w-xl">{line}</p>
             ))}
             {websiteUrl && (
