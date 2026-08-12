@@ -1,6 +1,6 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { Grid3X3, Clapperboard, Briefcase, UserRound } from "lucide-react";
+import { Grid3X3, Clapperboard, Briefcase } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import defaultAvatar from "@/assets/enzo-profile.jpg";
 import ProfileHeader from "@/components/profile/ProfileHeader";
@@ -9,7 +9,6 @@ import PostLightbox from "@/components/profile/PostLightbox";
 import StoryBar from "@/components/profile/StoryBar";
 import { Post, isVideoPost } from "@/components/profile/postTypes";
 import Works from "@/components/Works";
-import About from "@/components/About";
 import Admin from "@/components/Admin";
 
 type ProfileData = {
@@ -26,7 +25,7 @@ const tabs = [
   { id: "posts", label: "Posts", icon: Grid3X3 },
   { id: "reels", label: "Reels", icon: Clapperboard },
   { id: "works", label: "Works", icon: Briefcase },
-  { id: "about", label: "About", icon: UserRound },
+  
 ] as const;
 
 type TabId = (typeof tabs)[number]["id"];
@@ -159,13 +158,9 @@ const Index = () => {
                   emptyLabel={tab === "reels" ? "No reels yet" : "No posts yet"}
                 />
               )
-            ) : tab === "works" ? (
-              <div className="-mx-4 sm:-mx-6">
-                <Works />
-              </div>
             ) : (
               <div className="-mx-4 sm:-mx-6">
-                <About />
+                <Works />
               </div>
             )}
           </motion.div>
