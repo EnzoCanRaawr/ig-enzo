@@ -189,7 +189,7 @@ const PostLightbox = ({
       )}
 
       <div
-        className="relative w-full h-full md:h-[88vh] md:max-h-[860px] md:w-auto md:max-w-6xl md:mx-8 bg-black md:bg-neutral-950 md:rounded-xl overflow-hidden flex flex-col md:flex-row md:border md:border-white/10 shadow-2xl"
+        className="relative w-full h-full md:h-[88vh] md:max-h-[860px] md:w-full md:max-w-6xl md:mx-8 bg-black md:bg-neutral-950 md:rounded-xl overflow-hidden flex flex-col md:flex-row md:border md:border-white/10 shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Mobile top bar */}
