@@ -833,6 +833,9 @@ const AboutTab = ({ data, onSave, uploadImage }: {
       username: usernameVal || "enzo",
       display_name: displayNameVal || "Shawn Enzo J. Gimena",
       website_url: websiteVal || null,
+      github_url: githubVal || null,
+      instagram_url: instagramVal || null,
+      facebook_url: facebookVal || null,
     });
   };
 
