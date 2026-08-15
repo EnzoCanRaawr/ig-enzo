@@ -87,7 +87,20 @@ const ProfileHeader = ({
           {/* Username row */}
           <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 mb-5">
             <h1 className="text-xl md:text-2xl text-white font-light tracking-wide">{username}</h1>
-            <a
+            <button
+              type="button"
+              onClick={toggleFollow}
+              aria-pressed={following}
+              className={`flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
+                following
+                  ? "bg-white/10 hover:bg-white/15 text-white border border-white/15"
+                  : "bg-sky-500 hover:bg-sky-400 text-white"
+              }`}
+            >
+              {following ? <Check className="w-3.5 h-3.5" /> : <UserPlus className="w-3.5 h-3.5" />}
+              {following ? "Following" : "Follow"}
+            </button>
+            <
               href={`mailto:${email}`}
               className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-sky-500 hover:bg-sky-400 text-white text-xs font-semibold transition-colors"
             >
