@@ -111,6 +111,9 @@ const Index = () => {
           avatarUrl={avatarUrl}
           email={profile?.email || "enzogimena.shawn@gmail.com"}
           websiteUrl={profile?.website_url}
+          githubUrl={profile?.github_url}
+          instagramUrl={profile?.instagram_url}
+          facebookUrl={profile?.facebook_url}
           postCount={posts.length}
           likeCount={totals.likes}
           commentCount={totals.comments}
