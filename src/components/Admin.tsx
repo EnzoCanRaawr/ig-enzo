@@ -813,6 +813,9 @@ const AboutTab = ({ data, onSave, uploadImage }: {
       setUsernameVal(data.username || "");
       setDisplayNameVal(data.display_name || "");
       setWebsiteVal(data.website_url || "");
+      setGithubVal(data.github_url || "");
+      setInstagramVal(data.instagram_url || "");
+      setFacebookVal(data.facebook_url || "");
       setSkills(data.skills || []);
       setProfileUrl(data.profile_image_url || "");
       setInitialized(true);
