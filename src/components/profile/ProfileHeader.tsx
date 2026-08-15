@@ -100,9 +100,9 @@ const ProfileHeader = ({
               {following ? <Check className="w-3.5 h-3.5" /> : <UserPlus className="w-3.5 h-3.5" />}
               {following ? "Following" : "Follow"}
             </button>
-            <
+            <a
               href={`mailto:${email}`}
-              className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-sky-500 hover:bg-sky-400 text-white text-xs font-semibold transition-colors"
+              className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-white/10 hover:bg-white/15 border border-white/15 text-white text-xs font-semibold transition-colors"
             >
               <Mail className="w-3.5 h-3.5" /> Message
             </a>
