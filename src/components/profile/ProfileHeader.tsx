@@ -17,6 +17,9 @@ const ProfileHeader = ({
   avatarUrl,
   email,
   websiteUrl,
+  githubUrl,
+  instagramUrl,
+  facebookUrl,
   postCount,
   likeCount,
   commentCount,
@@ -29,11 +32,32 @@ const ProfileHeader = ({
   avatarUrl: string;
   email: string;
   websiteUrl?: string | null;
+  githubUrl?: string | null;
+  instagramUrl?: string | null;
+  facebookUrl?: string | null;
   postCount: number;
   likeCount: number;
   commentCount: number;
   avatarSlot?: ReactNode;
 }) => {
+  const [following, setFollowing] = useState(false);
+
+  useEffect(() => {
+    setFollowing(localStorage.getItem("profile-following") === "true");
+  }, []);
+
+  const toggleFollow = () => {
+    const next = !following;
+    setFollowing(next);
+    localStorage.setItem("profile-following", String(next));
+  };
+
+  const socialLinks = [
+    { icon: Github, href: githubUrl, label: "GitHub" },
+    { icon: Instagram, href: instagramUrl, label: "Instagram" },
+    { icon: Facebook, href: facebookUrl, label: "Facebook" },
+  ].filter((l) => !!l.href) as { icon: typeof Github; href: string; label: string }[];
+
   return (
     <motion.header
       initial={{ opacity: 0, y: 20 }}
