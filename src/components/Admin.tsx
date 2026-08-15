@@ -211,7 +211,7 @@ const Admin = () => {
     }
     if ("music_title" in payload) payload.music_title = (payload.music_title || "").trim() || null;
     const { error } = await supabase.from("visual_photos").update(payload).eq("id", id);
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     toast.success("Post updated");
     fetchData();
   };
