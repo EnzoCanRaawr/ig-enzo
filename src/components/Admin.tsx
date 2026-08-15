@@ -909,26 +909,14 @@ const AboutTab = ({ data, onSave, uploadImage }: {
           className="w-full bg-transparent border border-white/20 px-4 py-3 text-sm text-white focus:border-white/50 outline-none resize-none" />
       </div>
 
-      <div>
-        <div className="flex items-center justify-between mb-4">
-          <label className="text-xs text-white/40 uppercase tracking-[0.2em]">Skill Categories</label>
-          <button type="button" onClick={addSkillCategory} className="flex items-center gap-1 text-xs text-white/40 hover:text-white/60 transition-colors">
-            <Plus className="w-3 h-3" /> Add Category
-          </button>
-        </div>
-        {skills.map((cat, i) => (
-          <div key={i} className="border border-white/10 p-4 mb-3 space-y-3">
-            <div className="flex items-center justify-between">
-              <input type="text" placeholder="Category title" value={cat.title} onChange={(e) => updateSkillCategory(i, "title", e.target.value)}
-                className="bg-transparent border border-white/20 px-3 py-2 text-sm text-white focus:border-white/50 outline-none flex-1 mr-3" />
-              <button type="button" onClick={() => removeSkillCategory(i)} className="text-white/30 hover:text-red-400 transition-colors">
-                <Trash2 className="w-3.5 h-3.5" />
-              </button>
-            </div>
-            <input type="text" placeholder="Skills (comma separated)" value={cat.skills.join(", ")} onChange={(e) => updateSkillCategory(i, "skills", e.target.value)}
-              className="w-full bg-transparent border border-white/20 px-3 py-2 text-sm text-white focus:border-white/50 outline-none" />
-          </div>
-        ))}
+      <div className="space-y-4">
+        <label className="text-xs text-white/40 uppercase tracking-[0.2em] block">Social Links</label>
+        <input type="url" value={githubVal} onChange={(e) => setGithubVal(e.target.value)} placeholder="GitHub URL"
+          className="w-full bg-transparent border border-white/20 px-4 py-3 text-sm text-white focus:border-white/50 outline-none" />
+        <input type="url" value={instagramVal} onChange={(e) => setInstagramVal(e.target.value)} placeholder="Instagram URL"
+          className="w-full bg-transparent border border-white/20 px-4 py-3 text-sm text-white focus:border-white/50 outline-none" />
+        <input type="url" value={facebookVal} onChange={(e) => setFacebookVal(e.target.value)} placeholder="Facebook URL"
+          className="w-full bg-transparent border border-white/20 px-4 py-3 text-sm text-white focus:border-white/50 outline-none" />
       </div>
 
       <button type="submit" className="border border-white/40 px-8 py-3 text-sm tracking-[0.2em] uppercase hover:bg-white/10 transition-colors">
