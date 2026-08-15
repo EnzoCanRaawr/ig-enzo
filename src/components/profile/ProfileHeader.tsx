@@ -1,12 +1,6 @@
-import { ReactNode } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Github, Instagram, Facebook, Link as LinkIcon, Mail } from "lucide-react";
-
-const socialLinks = [
-  { icon: Github, href: "https://github.com/zoneclx", label: "GitHub" },
-  { icon: Instagram, href: "https://instagram.com/enzogimena.shawn", label: "Instagram" },
-  { icon: Facebook, href: "https://facebook.com/enzodegimena.shawn", label: "Facebook" },
-];
+import { Github, Instagram, Facebook, Link as LinkIcon, Mail, UserPlus, Check } from "lucide-react";
 
 const Stat = ({ value, label }: { value: number | string; label: string }) => (
   <div className="text-center md:text-left">
