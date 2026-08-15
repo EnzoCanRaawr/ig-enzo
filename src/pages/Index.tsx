@@ -6,7 +6,7 @@ import defaultAvatar from "@/assets/enzo-profile.jpg";
 import ProfileHeader from "@/components/profile/ProfileHeader";
 import PostGrid from "@/components/profile/PostGrid";
 import PostLightbox from "@/components/profile/PostLightbox";
-import StoryBar from "@/components/profile/StoryBar";
+import StoryAvatar from "@/components/profile/StoryAvatar";
 import { Post, isVideoPost } from "@/components/profile/postTypes";
 import Works from "@/components/Works";
 import Admin from "@/components/Admin";
@@ -111,9 +111,9 @@ const Index = () => {
           postCount={posts.length}
           likeCount={totals.likes}
           commentCount={totals.comments}
+          avatarSlot={<StoryAvatar username={username} avatarUrl={avatarUrl} displayName={displayName} />}
         />
 
-        <StoryBar username={username} avatarUrl={avatarUrl} />
 
 
 

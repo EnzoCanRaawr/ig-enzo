@@ -1,3 +1,4 @@
+import { ReactNode } from "react";
 import { motion } from "framer-motion";
 import { Github, Instagram, Facebook, Link as LinkIcon, Mail } from "lucide-react";
 
@@ -25,6 +26,7 @@ const ProfileHeader = ({
   postCount,
   likeCount,
   commentCount,
+  avatarSlot,
 }: {
   username: string;
   displayName: string;
@@ -36,6 +38,7 @@ const ProfileHeader = ({
   postCount: number;
   likeCount: number;
   commentCount: number;
+  avatarSlot?: ReactNode;
 }) => {
   return (
     <motion.header
@@ -47,17 +50,19 @@ const ProfileHeader = ({
       <div className="flex flex-col md:flex-row md:items-start gap-8 md:gap-14">
         {/* Avatar with story ring */}
         <div className="flex-shrink-0 mx-auto md:mx-0">
-          <div className="p-[3px] rounded-full bg-gradient-to-tr from-yellow-400 via-red-500 to-fuchsia-600">
-            <div className="p-[3px] rounded-full bg-black">
-              <img
-                src={avatarUrl}
-                alt={displayName}
-                className="w-24 h-24 md:w-36 md:h-36 rounded-full object-cover select-none pointer-events-none"
-                draggable={false}
-                onContextMenu={(e) => e.preventDefault()}
-              />
+          {avatarSlot ?? (
+            <div className="p-[3px] rounded-full bg-white/15">
+              <div className="p-[3px] rounded-full bg-black">
+                <img
+                  src={avatarUrl}
+                  alt={displayName}
+                  className="w-24 h-24 md:w-36 md:h-36 rounded-full object-cover select-none pointer-events-none"
+                  draggable={false}
+                  onContextMenu={(e) => e.preventDefault()}
+                />
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
         <div className="flex-1 min-w-0">

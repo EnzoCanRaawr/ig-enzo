@@ -12,12 +12,14 @@ export type Story = {
   expires_at: string;
 };
 
-const StoryBar = ({
+const StoryAvatar = ({
   username,
   avatarUrl,
+  displayName,
 }: {
   username: string;
   avatarUrl: string;
+  displayName: string;
 }) => {
   const [stories, setStories] = useState<Story[]>([]);
   const [index, setIndex] = useState<number | null>(null);
@@ -31,15 +33,14 @@ const StoryBar = ({
       .then(({ data }) => setStories((data as unknown as Story[]) || []));
   }, []);
 
+  const hasStories = stories.length > 0;
+
   const close = useCallback(() => setIndex(null), []);
   const next = useCallback(
     () => setIndex((p) => (p === null ? null : p >= stories.length - 1 ? null : p + 1)),
     [stories.length]
   );
-  const prev = useCallback(
-    () => setIndex((p) => (p === null || p === 0 ? p : p - 1)),
-    []
-  );
+  const prev = useCallback(() => setIndex((p) => (p === null || p === 0 ? p : p - 1)), []);
 
   useEffect(() => {
     if (index === null) return;
@@ -54,49 +55,35 @@ const StoryBar = ({
 
   useEffect(() => {
     if (index === null) return;
-    const story = stories[index];
-    if (story?.media_type === "video") return;
+    if (stories[index]?.media_type === "video") return;
     const t = setTimeout(next, 5000);
     return () => clearTimeout(t);
   }, [index, stories, next]);
-
-  if (stories.length === 0) return null;
 
   const active = index === null ? null : stories[index];
 
   return (
     <>
-      <div className="flex items-center gap-5 overflow-x-auto pb-6 pt-2">
-        {stories.map((s, i) => (
-          <button
-            key={s.id}
-            onClick={() => setIndex(i)}
-            className="flex flex-col items-center gap-2 flex-shrink-0"
-          >
-            <span className="p-[2px] rounded-full bg-gradient-to-tr from-yellow-400 via-red-500 to-fuchsia-600">
-              <span className="block p-[2px] rounded-full bg-black">
-                {s.media_type === "video" ? (
-                  <video
-                    src={s.media_url}
-                    muted
-                    className="w-16 h-16 rounded-full object-cover"
-                  />
-                ) : (
-                  <img
-                    src={s.media_url}
-                    alt={s.caption || "Story"}
-                    className="w-16 h-16 rounded-full object-cover"
-                    draggable={false}
-                  />
-                )}
-              </span>
-            </span>
-            <span className="text-[10px] text-white/50 max-w-[4.5rem] truncate">
-              {s.caption || username}
-            </span>
-          </button>
-        ))}
-      </div>
+      <button
+        type="button"
+        onClick={() => hasStories && setIndex(0)}
+        aria-label={hasStories ? `View ${username}'s stories` : displayName}
+        className={`block rounded-full p-[3px] ${
+          hasStories
+            ? "bg-gradient-to-tr from-yellow-400 via-red-500 to-fuchsia-600 cursor-pointer"
+            : "bg-white/15 cursor-default"
+        }`}
+      >
+        <span className="block p-[3px] rounded-full bg-black">
+          <img
+            src={avatarUrl}
+            alt={displayName}
+            className="w-24 h-24 md:w-36 md:h-36 rounded-full object-cover select-none"
+            draggable={false}
+            onContextMenu={(e) => e.preventDefault()}
+          />
+        </span>
+      </button>
 
       <AnimatePresence>
         {active && (
@@ -115,14 +102,11 @@ const StoryBar = ({
             </button>
 
             <div className="relative w-full max-w-md h-full md:h-[85vh] flex flex-col">
-              {/* progress */}
               <div className="flex gap-1 px-3 pt-4">
                 {stories.map((_, i) => (
                   <span
                     key={i}
-                    className={`h-0.5 flex-1 rounded-full ${
-                      i <= (index ?? 0) ? "bg-white" : "bg-white/25"
-                    }`}
+                    className={`h-0.5 flex-1 rounded-full ${i <= (index ?? 0) ? "bg-white" : "bg-white/25"}`}
                   />
                 ))}
               </div>
@@ -181,4 +165,4 @@ const StoryBar = ({
   );
 };
 
-export default StoryBar;
+export default StoryAvatar;
