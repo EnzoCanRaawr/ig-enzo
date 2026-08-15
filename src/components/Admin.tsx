@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
-import { Camera, Briefcase, User, Upload, Trash2, Plus, LogOut, GripVertical, LayoutDashboard, Eye, EyeOff, MessageSquare, Heart, Reply, Image, Settings, Video, Clock } from "lucide-react";
+import { Camera, Briefcase, User, Upload, Trash2, Plus, LogOut, GripVertical, LayoutDashboard, Eye, EyeOff, MessageSquare, Heart, Reply, Image, Settings, Video, Clock, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { detectPlatform } from "@/lib/music";
 import StoriesTab from "@/components/admin/StoriesTab";
@@ -15,6 +15,8 @@ type VisualPhoto = {
   is_enabled: boolean;
   comments_enabled: boolean;
   media_type: string;
+  music_url?: string | null;
+  music_title?: string | null;
 };
 
 type WorksProject = {
@@ -200,6 +202,20 @@ const Admin = () => {
     fetchData();
   };
 
+  const handleUpdatePhoto = async (id: string, updates: Partial<VisualPhoto>) => {
+    const payload: any = { ...updates };
+    if ("music_url" in payload) {
+      const url = (payload.music_url || "").trim();
+      payload.music_url = url || null;
+      payload.music_platform = url ? detectPlatform(url) : null;
+    }
+    if ("music_title" in payload) payload.music_title = (payload.music_title || "").trim() || null;
+    const { error } = await supabase.from("visual_photos").update(payload).eq("id", id);
+    if (error) return toast.error(error.message);
+    toast.success("Post updated");
+    fetchData();
+  };
+
   const handleReplyComment = async (commentId: string, reply: string) => {
     await supabase.from("photo_comments").update({ admin_reply: reply, admin_reply_at: new Date().toISOString() } as any).eq("id", commentId);
     toast.success("Reply sent");
@@ -314,7 +330,7 @@ const Admin = () => {
         )}
         {activeTab === "visual" && (
           <VisualTab photos={photos} onAdd={handleAddPhoto} onDelete={handleDeletePhoto}
-            onToggle={handleTogglePhoto} uploading={uploading}
+            onToggle={handleTogglePhoto} onUpdate={handleUpdatePhoto} uploading={uploading}
             commentCounts={commentCounts} reactionCounts={reactionCounts}
             allComments={allComments} onReply={handleReplyComment} />
         )}
@@ -395,11 +411,12 @@ const OverviewTab = ({ photos, projects, aboutData, totalComments, totalReaction
 };
 
 // Visual Tab
-const VisualTab = ({ photos, onAdd, onDelete, onToggle, uploading, commentCounts, reactionCounts, allComments, onReply }: {
+const VisualTab = ({ photos, onAdd, onDelete, onToggle, onUpdate, uploading, commentCounts, reactionCounts, allComments, onReply }: {
   photos: VisualPhoto[];
   onAdd: (files: File[], title: string, description: string, musicUrl: string, musicTitle: string) => Promise<void>;
   onDelete: (id: string, imageUrl: string) => Promise<void>;
   onToggle: (id: string, field: "is_enabled" | "comments_enabled", value: boolean) => Promise<void>;
+  onUpdate: (id: string, updates: Partial<VisualPhoto>) => Promise<void>;
   uploading: boolean;
   commentCounts: Record<string, number>;
   reactionCounts: Record<string, number>;
@@ -412,6 +429,23 @@ const VisualTab = ({ photos, onAdd, onDelete, onToggle, uploading, commentCounts
   const [musicUrl, setMusicUrl] = useState("");
   const [musicTitle, setMusicTitle] = useState("");
   const [expandedPhoto, setExpandedPhoto] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editDraft, setEditDraft] = useState({ title: "", description: "", music_url: "", music_title: "" });
+
+  const startEdit = (photo: VisualPhoto) => {
+    setEditingId(photo.id);
+    setEditDraft({
+      title: photo.title || "",
+      description: photo.description || "",
+      music_url: photo.music_url || "",
+      music_title: photo.music_title || "",
+    });
+  };
+
+  const saveEdit = async (id: string) => {
+    await onUpdate(id, editDraft as Partial<VisualPhoto>);
+    setEditingId(null);
+  };
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
   const [replyText, setReplyText] = useState("");
 
@@ -499,12 +533,47 @@ const VisualTab = ({ photos, onAdd, onDelete, onToggle, uploading, commentCounts
                     >
                       <MessageSquare className="w-3 h-3" /> {commentCounts[photo.id] || 0} comments
                     </button>
+                    <button
+                      onClick={() => (editingId === photo.id ? setEditingId(null) : startEdit(photo))}
+                      className="flex items-center gap-1 text-[10px] uppercase tracking-wider text-white/40 hover:text-white transition-colors"
+                    >
+                      <Pencil className="w-3 h-3" /> {editingId === photo.id ? "Cancel" : "Edit"}
+                    </button>
                   </div>
                 </div>
                 <button onClick={() => onDelete(photo.id, photo.image_url)} className="p-2 text-white/30 hover:text-red-400 transition-colors flex-shrink-0">
                   <Trash2 className="w-4 h-4" />
                 </button>
               </div>
+
+              {editingId === photo.id && (
+                <div className="mt-4 border-t border-white/10 pt-4 space-y-3">
+                  <h4 className="text-[10px] text-white/40 uppercase tracking-[0.2em]">Edit post</h4>
+                  <input type="text" placeholder="Title" value={editDraft.title}
+                    onChange={(e) => setEditDraft({ ...editDraft, title: e.target.value })}
+                    className="w-full bg-transparent border border-white/20 px-3 py-2 text-sm text-white focus:border-white/50 outline-none" />
+                  <textarea placeholder="Description" value={editDraft.description} rows={3}
+                    onChange={(e) => setEditDraft({ ...editDraft, description: e.target.value })}
+                    className="w-full bg-transparent border border-white/20 px-3 py-2 text-sm text-white focus:border-white/50 outline-none resize-y" />
+                  <div className="grid sm:grid-cols-2 gap-3">
+                    <input type="url" placeholder="Music link (YouTube / Spotify / SoundCloud)" value={editDraft.music_url}
+                      onChange={(e) => setEditDraft({ ...editDraft, music_url: e.target.value })}
+                      className="w-full bg-transparent border border-white/20 px-3 py-2 text-sm text-white focus:border-white/50 outline-none" />
+                    <input type="text" placeholder="Track name" value={editDraft.music_title}
+                      onChange={(e) => setEditDraft({ ...editDraft, music_title: e.target.value })}
+                      className="w-full bg-transparent border border-white/20 px-3 py-2 text-sm text-white focus:border-white/50 outline-none" />
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <button onClick={() => saveEdit(photo.id)}
+                      className="border border-white/40 px-5 py-2 text-[10px] uppercase tracking-[0.15em] hover:bg-white/10 transition-colors">
+                      Save
+                    </button>
+                    <button onClick={() => setEditingId(null)} className="text-[10px] uppercase tracking-[0.15em] text-white/40 hover:text-white transition-colors">
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
 
               {/* Expandable comments section */}
               {expandedPhoto === photo.id && photoComments.length > 0 && (
