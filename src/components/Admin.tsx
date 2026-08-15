@@ -42,6 +42,9 @@ type AboutContent = {
   username?: string;
   display_name?: string;
   website_url?: string | null;
+  github_url?: string | null;
+  instagram_url?: string | null;
+  facebook_url?: string | null;
 };
 
 type Comment = {
