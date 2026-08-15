@@ -19,6 +19,9 @@ type ProfileData = {
   username: string;
   display_name: string;
   website_url: string | null;
+  github_url?: string | null;
+  instagram_url?: string | null;
+  facebook_url?: string | null;
 };
 
 const tabs = [
@@ -108,6 +111,9 @@ const Index = () => {
           avatarUrl={avatarUrl}
           email={profile?.email || "enzogimena.shawn@gmail.com"}
           websiteUrl={profile?.website_url}
+          githubUrl={profile?.github_url}
+          instagramUrl={profile?.instagram_url}
+          facebookUrl={profile?.facebook_url}
           postCount={posts.length}
           likeCount={totals.likes}
           commentCount={totals.comments}

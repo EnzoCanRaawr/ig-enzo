@@ -1,12 +1,6 @@
-import { ReactNode } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Github, Instagram, Facebook, Link as LinkIcon, Mail } from "lucide-react";
-
-const socialLinks = [
-  { icon: Github, href: "https://github.com/zoneclx", label: "GitHub" },
-  { icon: Instagram, href: "https://instagram.com/enzogimena.shawn", label: "Instagram" },
-  { icon: Facebook, href: "https://facebook.com/enzodegimena.shawn", label: "Facebook" },
-];
+import { Github, Instagram, Facebook, Link as LinkIcon, Mail, UserPlus, Check } from "lucide-react";
 
 const Stat = ({ value, label }: { value: number | string; label: string }) => (
   <div className="text-center md:text-left">
@@ -23,6 +17,9 @@ const ProfileHeader = ({
   avatarUrl,
   email,
   websiteUrl,
+  githubUrl,
+  instagramUrl,
+  facebookUrl,
   postCount,
   likeCount,
   commentCount,
@@ -35,11 +32,32 @@ const ProfileHeader = ({
   avatarUrl: string;
   email: string;
   websiteUrl?: string | null;
+  githubUrl?: string | null;
+  instagramUrl?: string | null;
+  facebookUrl?: string | null;
   postCount: number;
   likeCount: number;
   commentCount: number;
   avatarSlot?: ReactNode;
 }) => {
+  const [following, setFollowing] = useState(false);
+
+  useEffect(() => {
+    setFollowing(localStorage.getItem("profile-following") === "true");
+  }, []);
+
+  const toggleFollow = () => {
+    const next = !following;
+    setFollowing(next);
+    localStorage.setItem("profile-following", String(next));
+  };
+
+  const socialLinks = [
+    { icon: Github, href: githubUrl, label: "GitHub" },
+    { icon: Instagram, href: instagramUrl, label: "Instagram" },
+    { icon: Facebook, href: facebookUrl, label: "Facebook" },
+  ].filter((l) => !!l.href) as { icon: typeof Github; href: string; label: string }[];
+
   return (
     <motion.header
       initial={{ opacity: 0, y: 20 }}
@@ -69,9 +87,22 @@ const ProfileHeader = ({
           {/* Username row */}
           <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 mb-5">
             <h1 className="text-xl md:text-2xl text-white font-light tracking-wide">{username}</h1>
+            <button
+              type="button"
+              onClick={toggleFollow}
+              aria-pressed={following}
+              className={`flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
+                following
+                  ? "bg-white/10 hover:bg-white/15 text-white border border-white/15"
+                  : "bg-sky-500 hover:bg-sky-400 text-white"
+              }`}
+            >
+              {following ? <Check className="w-3.5 h-3.5" /> : <UserPlus className="w-3.5 h-3.5" />}
+              {following ? "Following" : "Follow"}
+            </button>
             <a
               href={`mailto:${email}`}
-              className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-sky-500 hover:bg-sky-400 text-white text-xs font-semibold transition-colors"
+              className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-white/10 hover:bg-white/15 border border-white/15 text-white text-xs font-semibold transition-colors"
             >
               <Mail className="w-3.5 h-3.5" /> Message
             </a>

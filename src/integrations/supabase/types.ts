@@ -19,7 +19,10 @@ export type Database = {
           bio_paragraphs: string[] | null
           display_name: string
           email: string | null
+          facebook_url: string | null
+          github_url: string | null
           id: string
+          instagram_url: string | null
           profile_image_url: string | null
           skills: Json | null
           tagline: string | null
@@ -31,7 +34,10 @@ export type Database = {
           bio_paragraphs?: string[] | null
           display_name?: string
           email?: string | null
+          facebook_url?: string | null
+          github_url?: string | null
           id?: string
+          instagram_url?: string | null
           profile_image_url?: string | null
           skills?: Json | null
           tagline?: string | null
@@ -43,7 +49,10 @@ export type Database = {
           bio_paragraphs?: string[] | null
           display_name?: string
           email?: string | null
+          facebook_url?: string | null
+          github_url?: string | null
           id?: string
+          instagram_url?: string | null
           profile_image_url?: string | null
           skills?: Json | null
           tagline?: string | null
