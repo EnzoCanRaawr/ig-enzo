@@ -180,6 +180,38 @@ export type Database = {
         }
         Relationships: []
       }
+      story_reactions: {
+        Row: {
+          created_at: string
+          id: string
+          reaction: string
+          session_id: string
+          story_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          reaction?: string
+          session_id: string
+          story_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          reaction?: string
+          session_id?: string
+          story_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "story_reactions_story_id_fkey"
+            columns: ["story_id"]
+            isOneToOne: false
+            referencedRelation: "stories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           id: string
