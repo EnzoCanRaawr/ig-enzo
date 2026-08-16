@@ -2,6 +2,16 @@ import { ReactNode, useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Github, Instagram, Facebook, Link as LinkIcon, Mail, UserPlus, Check } from "lucide-react";
 
+const VerifiedBadge = () => (
+  <span
+    className="inline-flex items-center justify-center w-4 h-4 md:w-5 md:h-5 rounded-full bg-sky-500 text-white"
+    aria-label="Verified account"
+    title="Verified"
+  >
+    <Check className="w-2.5 h-2.5 md:w-3 md:h-3 stroke-[3.5]" />
+  </span>
+);
+
 const Stat = ({ value, label }: { value: number | string; label: string }) => (
   <div className="text-center md:text-left">
     <span className="text-white font-semibold text-base md:text-lg">{value}</span>
