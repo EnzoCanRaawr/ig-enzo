@@ -96,7 +96,10 @@ const ProfileHeader = ({
         <div className="flex-1 min-w-0">
           {/* Username row */}
           <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 mb-5">
-            <h1 className="text-xl md:text-2xl text-white font-light tracking-wide">{username}</h1>
+            <h1 className="text-xl md:text-2xl text-white font-light tracking-wide flex items-center gap-2">
+              {username}
+              <VerifiedBadge />
+            </h1>
             <button
               type="button"
               onClick={toggleFollow}
