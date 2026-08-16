@@ -74,6 +74,53 @@ const StoryAvatar = ({
 
   const active = index === null ? null : stories[index];
 
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const [myReaction, setMyReaction] = useState<string | null>(null);
+  const [counts, setCounts] = useState<Record<string, number>>({});
+
+  const loadReactions = useCallback(async (storyId: string) => {
+    const sessionId = getSessionId();
+    const { data } = await supabase
+      .from("story_reactions" as any)
+      .select("reaction, session_id")
+      .eq("story_id", storyId);
+    const rows = (data as unknown as { reaction: string; session_id: string }[]) || [];
+    const c: Record<string, number> = {};
+    rows.forEach((r) => { c[r.reaction] = (c[r.reaction] || 0) + 1; });
+    setCounts(c);
+    setMyReaction(rows.find((r) => r.session_id === sessionId)?.reaction ?? null);
+  }, []);
+
+  useEffect(() => {
+    if (!active) {
+      setCounts({});
+      setMyReaction(null);
+      return;
+    }
+    loadReactions(active.id);
+  }, [active, loadReactions]);
+
+  const react = async (emoji: string) => {
+    if (!active) return;
+    const sessionId = getSessionId();
+    if (myReaction === emoji) {
+      await supabase
+        .from("story_reactions" as any)
+        .delete()
+        .eq("story_id", active.id)
+        .eq("session_id", sessionId);
+    } else {
+      await supabase
+        .from("story_reactions" as any)
+        .upsert(
+          { story_id: active.id, session_id: sessionId, reaction: emoji } as any,
+          { onConflict: "story_id,session_id" }
+        );
+    }
+    loadReactions(active.id);
+  };
+
+
   return (
     <>
       <button
