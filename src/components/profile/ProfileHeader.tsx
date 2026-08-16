@@ -111,7 +111,7 @@ const ProfileHeader = ({
           {/* Stats */}
           <div className="flex items-center justify-center md:justify-start gap-7 mb-5">
             <Stat value={postCount} label="posts" />
-            <Stat value={following ? "1.4K" : "1.4K"} label="followers" />
+            <Stat value="1.4K" label="followers" />
             <Stat value={likeCount} label="likes" />
             <Stat value={commentCount} label="comments" />
 
