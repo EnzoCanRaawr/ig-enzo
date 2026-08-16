@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, ChevronLeft, ChevronRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -11,6 +11,18 @@ export type Story = {
   created_at: string;
   expires_at: string;
 };
+
+const REACTIONS = ["❤️", "🔥", "😂", "😮", "😢", "👏"];
+
+const getSessionId = () => {
+  let id = localStorage.getItem("story_session_id");
+  if (!id) {
+    id = crypto.randomUUID();
+    localStorage.setItem("story_session_id", id);
+  }
+  return id;
+};
+
 
 const StoryAvatar = ({
   username,
