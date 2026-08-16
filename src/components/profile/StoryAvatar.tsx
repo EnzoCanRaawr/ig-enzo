@@ -179,11 +179,14 @@ const StoryAvatar = ({
                 {active.media_type === "video" ? (
                   <video
                     key={active.id}
+                    ref={videoRef}
                     src={active.media_url}
                     autoPlay
-                    controls
+                    playsInline
                     onEnded={next}
-                    className="max-h-full max-w-full object-contain"
+                    onPause={() => videoRef.current?.play().catch(() => {})}
+                    onContextMenu={(e) => e.preventDefault()}
+                    className="max-h-full max-w-full object-contain pointer-events-none"
                   />
                 ) : (
                   <img
@@ -197,8 +200,29 @@ const StoryAvatar = ({
               </div>
 
               {active.caption && (
-                <p className="px-5 py-4 text-sm text-white/80 text-center">{active.caption}</p>
+                <p className="px-5 pt-4 text-sm text-white/80 text-center">{active.caption}</p>
               )}
+
+              <div className="flex items-center justify-center gap-2 px-4 py-5">
+                {REACTIONS.map((emoji) => (
+                  <button
+                    key={emoji}
+                    onClick={() => react(emoji)}
+                    aria-label={`React ${emoji}`}
+                    className={`flex items-center gap-1 rounded-full px-3 py-2 text-lg leading-none transition-all ${
+                      myReaction === emoji
+                        ? "bg-white/20 scale-110"
+                        : "bg-white/5 hover:bg-white/15"
+                    }`}
+                  >
+                    <span>{emoji}</span>
+                    {counts[emoji] ? (
+                      <span className="text-xs text-white/70">{counts[emoji]}</span>
+                    ) : null}
+                  </button>
+                ))}
+              </div>
+
             </div>
 
             {index !== null && index > 0 && (
