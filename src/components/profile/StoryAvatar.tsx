@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, ChevronLeft, ChevronRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -11,6 +11,18 @@ export type Story = {
   created_at: string;
   expires_at: string;
 };
+
+const REACTIONS = ["❤️", "🔥", "😂", "😮", "😢", "👏"];
+
+const getSessionId = () => {
+  let id = localStorage.getItem("story_session_id");
+  if (!id) {
+    id = crypto.randomUUID();
+    localStorage.setItem("story_session_id", id);
+  }
+  return id;
+};
+
 
 const StoryAvatar = ({
   username,
@@ -61,6 +73,53 @@ const StoryAvatar = ({
   }, [index, stories, next]);
 
   const active = index === null ? null : stories[index];
+
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const [myReaction, setMyReaction] = useState<string | null>(null);
+  const [counts, setCounts] = useState<Record<string, number>>({});
+
+  const loadReactions = useCallback(async (storyId: string) => {
+    const sessionId = getSessionId();
+    const { data } = await supabase
+      .from("story_reactions" as any)
+      .select("reaction, session_id")
+      .eq("story_id", storyId);
+    const rows = (data as unknown as { reaction: string; session_id: string }[]) || [];
+    const c: Record<string, number> = {};
+    rows.forEach((r) => { c[r.reaction] = (c[r.reaction] || 0) + 1; });
+    setCounts(c);
+    setMyReaction(rows.find((r) => r.session_id === sessionId)?.reaction ?? null);
+  }, []);
+
+  useEffect(() => {
+    if (!active) {
+      setCounts({});
+      setMyReaction(null);
+      return;
+    }
+    loadReactions(active.id);
+  }, [active, loadReactions]);
+
+  const react = async (emoji: string) => {
+    if (!active) return;
+    const sessionId = getSessionId();
+    if (myReaction === emoji) {
+      await supabase
+        .from("story_reactions" as any)
+        .delete()
+        .eq("story_id", active.id)
+        .eq("session_id", sessionId);
+    } else {
+      await supabase
+        .from("story_reactions" as any)
+        .upsert(
+          { story_id: active.id, session_id: sessionId, reaction: emoji } as any,
+          { onConflict: "story_id,session_id" }
+        );
+    }
+    loadReactions(active.id);
+  };
+
 
   return (
     <>
@@ -120,11 +179,14 @@ const StoryAvatar = ({
                 {active.media_type === "video" ? (
                   <video
                     key={active.id}
+                    ref={videoRef}
                     src={active.media_url}
                     autoPlay
-                    controls
+                    playsInline
                     onEnded={next}
-                    className="max-h-full max-w-full object-contain"
+                    onPause={() => videoRef.current?.play().catch(() => {})}
+                    onContextMenu={(e) => e.preventDefault()}
+                    className="max-h-full max-w-full object-contain pointer-events-none"
                   />
                 ) : (
                   <img
@@ -138,8 +200,29 @@ const StoryAvatar = ({
               </div>
 
               {active.caption && (
-                <p className="px-5 py-4 text-sm text-white/80 text-center">{active.caption}</p>
+                <p className="px-5 pt-4 text-sm text-white/80 text-center">{active.caption}</p>
               )}
+
+              <div className="flex items-center justify-center gap-2 px-4 py-5">
+                {REACTIONS.map((emoji) => (
+                  <button
+                    key={emoji}
+                    onClick={() => react(emoji)}
+                    aria-label={`React ${emoji}`}
+                    className={`flex items-center gap-1 rounded-full px-3 py-2 text-lg leading-none transition-all ${
+                      myReaction === emoji
+                        ? "bg-white/20 scale-110"
+                        : "bg-white/5 hover:bg-white/15"
+                    }`}
+                  >
+                    <span>{emoji}</span>
+                    {counts[emoji] ? (
+                      <span className="text-xs text-white/70">{counts[emoji]}</span>
+                    ) : null}
+                  </button>
+                ))}
+              </div>
+
             </div>
 
             {index !== null && index > 0 && (
