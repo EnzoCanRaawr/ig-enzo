@@ -199,6 +199,20 @@ const Index = () => {
           />
         )}
       </AnimatePresence>
+
+      <MobileNav
+        active={tab}
+        avatarUrl={avatarUrl}
+        onSelect={(id: MobileNavId) => {
+          setActiveIndex(null);
+          if (id === "profile") {
+            window.scrollTo({ top: 0, behavior: "smooth" });
+            return;
+          }
+          setTab(id);
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        }}
+      />
     </div>
   );
 };
