@@ -10,6 +10,7 @@ import StoryAvatar from "@/components/profile/StoryAvatar";
 import { Post, isVideoPost } from "@/components/profile/postTypes";
 import Works from "@/components/Works";
 import Admin from "@/components/Admin";
+import MobileNav, { MobileNavId } from "@/components/profile/MobileNav";
 
 type ProfileData = {
   bio_paragraphs: string[];
@@ -102,7 +103,18 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-black text-white">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 pb-24">
+      {/* Mobile top app bar */}
+      <header className="md:hidden sticky top-0 z-30 flex items-center justify-between px-4 h-14 border-b border-white/10 bg-black/90 backdrop-blur-xl">
+        <span className="text-base font-semibold tracking-tight">{username}</span>
+        <a
+          href="/music"
+          className="text-[11px] uppercase tracking-[0.2em] text-white/50 hover:text-white transition-colors"
+        >
+          Music
+        </a>
+      </header>
+
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 pb-28 md:pb-24">
         <ProfileHeader
           username={username}
           displayName={displayName}
@@ -187,6 +199,20 @@ const Index = () => {
           />
         )}
       </AnimatePresence>
+
+      <MobileNav
+        active={tab}
+        avatarUrl={avatarUrl}
+        onSelect={(id: MobileNavId) => {
+          setActiveIndex(null);
+          if (id === "profile") {
+            window.scrollTo({ top: 0, behavior: "smooth" });
+            return;
+          }
+          setTab(id);
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        }}
+      />
     </div>
   );
 };
