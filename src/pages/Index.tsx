@@ -10,6 +10,7 @@ import StoryAvatar from "@/components/profile/StoryAvatar";
 import { Post, isVideoPost } from "@/components/profile/postTypes";
 import Works from "@/components/Works";
 import Admin from "@/components/Admin";
+import MobileNav, { MobileNavId } from "@/components/profile/MobileNav";
 
 type ProfileData = {
   bio_paragraphs: string[];
