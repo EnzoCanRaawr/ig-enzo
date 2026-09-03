@@ -75,16 +75,16 @@ const ProfileHeader = ({
       transition={{ duration: 0.6 }}
       className="pt-24 pb-10 md:pb-14"
     >
-      <div className="flex flex-col md:flex-row md:items-start gap-8 md:gap-14">
+      <div className="flex flex-row items-center md:items-start gap-4 md:gap-14">
         {/* Avatar with story ring */}
-        <div className="flex-shrink-0 mx-auto md:mx-0">
+        <div className="flex-shrink-0">
           {avatarSlot ?? (
             <div className="p-[3px] rounded-full bg-white/15">
               <div className="p-[3px] rounded-full bg-black">
                 <img
                   src={avatarUrl}
                   alt={displayName}
-                  className="w-24 h-24 md:w-36 md:h-36 rounded-full object-cover select-none pointer-events-none"
+                  className="w-20 h-20 md:w-36 md:h-36 rounded-full object-cover select-none pointer-events-none"
                   draggable={false}
                   onContextMenu={(e) => e.preventDefault()}
                 />
@@ -95,8 +95,8 @@ const ProfileHeader = ({
 
         <div className="flex-1 min-w-0">
           {/* Username row */}
-          <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 mb-5">
-            <h1 className="text-xl md:text-2xl text-white font-light tracking-wide flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2 md:gap-4 mb-3 md:mb-5">
+            <h1 className="text-lg md:text-2xl text-white font-light tracking-wide flex items-center gap-2">
               {username}
               <VerifiedBadge />
             </h1>
@@ -104,7 +104,7 @@ const ProfileHeader = ({
               type="button"
               onClick={toggleFollow}
               aria-pressed={following}
-              className={`flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
+              className={`flex items-center gap-1.5 px-3 md:px-4 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
                 following
                   ? "bg-white/10 hover:bg-white/15 text-white border border-white/15"
                   : "bg-sky-500 hover:bg-sky-400 text-white"
@@ -115,56 +115,55 @@ const ProfileHeader = ({
             </button>
             <a
               href={`mailto:${email}`}
-              className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-white/10 hover:bg-white/15 border border-white/15 text-white text-xs font-semibold transition-colors"
+              className="flex items-center gap-1.5 px-3 md:px-4 py-1.5 rounded-lg bg-white/10 hover:bg-white/15 border border-white/15 text-white text-xs font-semibold transition-colors"
             >
               <Mail className="w-3.5 h-3.5" /> Message
             </a>
           </div>
 
           {/* Stats */}
-          <div className="flex items-center justify-center md:justify-start gap-7 mb-5">
+          <div className="flex items-center gap-4 md:gap-7">
             <Stat value={postCount} label="posts" />
             <Stat value="1.4K" label="followers" />
             <Stat value={likeCount} label="likes" />
             <Stat value={commentCount} label="comments" />
-
           </div>
+        </div>
+      </div>
 
-          {/* Bio */}
-          <div className="text-center md:text-left space-y-1">
-            <p className="text-sm text-white font-semibold">{displayName}</p>
-            <p className="text-xs text-white/50 uppercase tracking-[0.2em]">{tagline}</p>
-            {bio.map((line, i) => (
-              <p key={i} className="text-sm text-white/70 leading-relaxed max-w-xl">{line}</p>
-            ))}
-            {websiteUrl && (
-              <a
-                href={websiteUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 text-sm text-sky-400 hover:text-sky-300 transition-colors"
-              >
-                <LinkIcon className="w-3.5 h-3.5" />
-                {websiteUrl.replace(/^https?:\/\//, "")}
-              </a>
-            )}
-          </div>
+      {/* Bio — full width below, like Instagram */}
+      <div className="mt-4 md:mt-6 space-y-1">
+        <p className="text-sm text-white font-semibold">{displayName}</p>
+        <p className="text-xs text-white/50 uppercase tracking-[0.2em]">{tagline}</p>
+        {bio.map((line, i) => (
+          <p key={i} className="text-sm text-white/70 leading-relaxed max-w-xl">{line}</p>
+        ))}
+        {websiteUrl && (
+          <a
+            href={websiteUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 text-sm text-sky-400 hover:text-sky-300 transition-colors"
+          >
+            <LinkIcon className="w-3.5 h-3.5" />
+            {websiteUrl.replace(/^https?:\/\//, "")}
+          </a>
+        )}
 
-          {/* Socials */}
-          <div className="flex items-center justify-center md:justify-start gap-5 mt-5">
-            {socialLinks.map((link) => (
-              <a
-                key={link.label}
-                href={link.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-white/40 hover:text-white transition-colors"
-                aria-label={link.label}
-              >
-                <link.icon className="w-4 h-4" strokeWidth={1.5} />
-              </a>
-            ))}
-          </div>
+        {/* Socials */}
+        <div className="flex items-center gap-5 pt-3">
+          {socialLinks.map((link) => (
+            <a
+              key={link.label}
+              href={link.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-white/40 hover:text-white transition-colors"
+              aria-label={link.label}
+            >
+              <link.icon className="w-4 h-4" strokeWidth={1.5} />
+            </a>
+          ))}
         </div>
       </div>
     </motion.header>
