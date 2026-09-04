@@ -1,6 +1,10 @@
 import { ReactNode, useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Github, Instagram, Facebook, Link as LinkIcon, Mail, UserPlus, Check } from "lucide-react";
+import {
+  Github, Instagram, Facebook, Link as LinkIcon, Mail, UserPlus, Check,
+  Volume2, VolumeX, Music2,
+} from "lucide-react";
+import { getMusicEmbed } from "@/lib/music";
 
 const VerifiedBadge = () => (
   <span
