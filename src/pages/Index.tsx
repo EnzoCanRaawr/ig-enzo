@@ -121,6 +121,8 @@ const Index = () => {
           likeCount={totals.likes}
           commentCount={totals.comments}
           avatarSlot={<StoryAvatar username={username} avatarUrl={avatarUrl} displayName={displayName} />}
+          musicUrl={profileTrack?.music_url}
+          musicTitle={profileTrack?.music_title}
         />
 
 
