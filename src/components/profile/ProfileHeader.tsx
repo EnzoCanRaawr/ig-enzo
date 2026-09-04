@@ -55,8 +55,13 @@ const ProfileHeader = ({
   likeCount: number;
   commentCount: number;
   avatarSlot?: ReactNode;
+  musicUrl?: string | null;
+  musicTitle?: string | null;
 }) => {
   const [following, setFollowing] = useState(false);
+  const [soundOn, setSoundOn] = useState(false);
+  const profileEmbed = getMusicEmbed(musicUrl || null);
+  const hasSound = !!profileEmbed?.embedUrl;
 
   useEffect(() => {
     setFollowing(localStorage.getItem("profile-following") === "true");
