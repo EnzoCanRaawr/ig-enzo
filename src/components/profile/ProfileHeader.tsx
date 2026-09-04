@@ -38,6 +38,8 @@ const ProfileHeader = ({
   likeCount,
   commentCount,
   avatarSlot,
+  musicUrl,
+  musicTitle,
 }: {
   username: string;
   displayName: string;
