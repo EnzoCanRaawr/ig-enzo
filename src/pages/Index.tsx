@@ -24,6 +24,8 @@ type ProfileData = {
   facebook_url?: string | null;
   banner_url?: string | null;
   banner_type?: string | null;
+  profile_music_url?: string | null;
+  profile_music_title?: string | null;
 };
 
 const tabs = [
@@ -122,8 +124,8 @@ const Index = () => {
           likeCount={totals.likes}
           commentCount={totals.comments}
           avatarSlot={<StoryAvatar username={username} avatarUrl={avatarUrl} displayName={displayName} />}
-          musicUrl={profileTrack?.music_url}
-          musicTitle={profileTrack?.music_title}
+          musicUrl={profile?.profile_music_url || profileTrack?.music_url}
+          musicTitle={profile?.profile_music_title || profileTrack?.music_title}
           bannerUrl={profile?.banner_url}
           bannerType={profile?.banner_type}
         />

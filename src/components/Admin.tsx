@@ -47,6 +47,8 @@ type AboutContent = {
   facebook_url?: string | null;
   banner_url?: string | null;
   banner_type?: string | null;
+  profile_music_url?: string | null;
+  profile_music_title?: string | null;
 };
 
 type Comment = {
@@ -806,6 +808,8 @@ const AboutTab = ({ data, onSave, uploadImage }: {
   const [profileUrl, setProfileUrl] = useState("");
   const [bannerUrl, setBannerUrl] = useState("");
   const [bannerType, setBannerType] = useState("image");
+  const [musicUrlVal, setMusicUrlVal] = useState("");
+  const [musicTitleVal, setMusicTitleVal] = useState("");
   const [uploading, setUploading] = useState(false);
   const [bannerUploading, setBannerUploading] = useState(false);
   const [initialized, setInitialized] = useState(false);
@@ -825,6 +829,8 @@ const AboutTab = ({ data, onSave, uploadImage }: {
       setProfileUrl(data.profile_image_url || "");
       setBannerUrl(data.banner_url || "");
       setBannerType(data.banner_type || "image");
+      setMusicUrlVal(data.profile_music_url || "");
+      setMusicTitleVal(data.profile_music_title || "");
       setInitialized(true);
     }
   }, [data, initialized]);
@@ -845,6 +851,8 @@ const AboutTab = ({ data, onSave, uploadImage }: {
       facebook_url: facebookVal || null,
       banner_url: bannerUrl || null,
       banner_type: bannerType,
+      profile_music_url: musicUrlVal || null,
+      profile_music_title: musicTitleVal || null,
     });
   };
 
@@ -932,6 +940,14 @@ const AboutTab = ({ data, onSave, uploadImage }: {
       <div>
         <label className="text-xs text-white/40 uppercase tracking-[0.2em] block mb-2">Website Link</label>
         <input type="url" value={websiteVal} onChange={(e) => setWebsiteVal(e.target.value)} placeholder="https://..."
+          className="w-full bg-transparent border border-white/20 px-4 py-3 text-sm text-white focus:border-white/50 outline-none" />
+      </div>
+
+      <div className="space-y-3">
+        <label className="text-xs text-white/40 uppercase tracking-[0.2em] block">Profile Sound (YouTube / Spotify / SoundCloud link)</label>
+        <input type="url" value={musicUrlVal} onChange={(e) => setMusicUrlVal(e.target.value)} placeholder="https://open.spotify.com/track/..."
+          className="w-full bg-transparent border border-white/20 px-4 py-3 text-sm text-white focus:border-white/50 outline-none" />
+        <input type="text" value={musicTitleVal} onChange={(e) => setMusicTitleVal(e.target.value)} placeholder="Track name shown on the button"
           className="w-full bg-transparent border border-white/20 px-4 py-3 text-sm text-white focus:border-white/50 outline-none" />
       </div>
 
