@@ -102,13 +102,40 @@ const ProfileHeader = ({
     </button>
   ) : null;
 
+  const hasBanner = !!bannerUrl;
+  const isBannerVideo = bannerType === "video";
+
   return (
     <motion.header
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6 }}
-      className="pt-6 pb-8 md:pt-24 md:pb-14"
+      className={`relative pb-8 md:pb-14 ${
+        hasBanner ? "pt-[110px] sm:pt-[150px] md:pt-[220px]" : "pt-6 md:pt-24"
+      }`}
     >
+      {/* Full-bleed banner behind the profile */}
+      {hasBanner && (
+        <div
+          className="absolute top-0 left-1/2 -translate-x-1/2 w-screen max-w-[100vw] h-[190px] sm:h-[250px] md:h-[340px] overflow-hidden -z-10 pointer-events-none select-none"
+          aria-hidden="true"
+        >
+          {isBannerVideo ? (
+            <video
+              src={bannerUrl!}
+              className="w-full h-full object-cover"
+              autoPlay
+              muted
+              loop
+              playsInline
+            />
+          ) : (
+            <img src={bannerUrl!} alt="" className="w-full h-full object-cover" draggable={false} />
+          )}
+          <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/50 to-black" />
+        </div>
+      )}
+
       {/* Hidden profile audio player */}
       {hasSound && soundOn && (
         <iframe
@@ -121,8 +148,9 @@ const ProfileHeader = ({
         />
       )}
 
-      <div className="flex flex-row items-center md:items-start gap-5 md:gap-14">
+      <div className="relative flex flex-row items-center md:items-start gap-4 sm:gap-5 md:gap-14">
         {/* Avatar with story ring */}
+
         <div className="flex-shrink-0">
           {avatarSlot ?? (
             <div className="p-[3px] rounded-full bg-white/15">
