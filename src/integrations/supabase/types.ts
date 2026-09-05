@@ -16,6 +16,8 @@ export type Database = {
     Tables: {
       about_content: {
         Row: {
+          banner_type: string
+          banner_url: string | null
           bio_paragraphs: string[] | null
           display_name: string
           email: string | null
@@ -31,6 +33,8 @@ export type Database = {
           website_url: string | null
         }
         Insert: {
+          banner_type?: string
+          banner_url?: string | null
           bio_paragraphs?: string[] | null
           display_name?: string
           email?: string | null
@@ -46,6 +50,8 @@ export type Database = {
           website_url?: string | null
         }
         Update: {
+          banner_type?: string
+          banner_url?: string | null
           bio_paragraphs?: string[] | null
           display_name?: string
           email?: string | null
