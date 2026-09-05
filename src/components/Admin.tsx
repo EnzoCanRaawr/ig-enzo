@@ -45,6 +45,8 @@ type AboutContent = {
   github_url?: string | null;
   instagram_url?: string | null;
   facebook_url?: string | null;
+  banner_url?: string | null;
+  banner_type?: string | null;
 };
 
 type Comment = {
@@ -802,7 +804,10 @@ const AboutTab = ({ data, onSave, uploadImage }: {
   const [facebookVal, setFacebookVal] = useState("");
   const [skills, setSkills] = useState<{ title: string; skills: string[] }[]>([]);
   const [profileUrl, setProfileUrl] = useState("");
+  const [bannerUrl, setBannerUrl] = useState("");
+  const [bannerType, setBannerType] = useState("image");
   const [uploading, setUploading] = useState(false);
+  const [bannerUploading, setBannerUploading] = useState(false);
   const [initialized, setInitialized] = useState(false);
 
   useEffect(() => {
@@ -818,6 +823,8 @@ const AboutTab = ({ data, onSave, uploadImage }: {
       setFacebookVal(data.facebook_url || "");
       setSkills(data.skills || []);
       setProfileUrl(data.profile_image_url || "");
+      setBannerUrl(data.banner_url || "");
+      setBannerType(data.banner_type || "image");
       setInitialized(true);
     }
   }, [data, initialized]);
@@ -836,6 +843,8 @@ const AboutTab = ({ data, onSave, uploadImage }: {
       github_url: githubVal || null,
       instagram_url: instagramVal || null,
       facebook_url: facebookVal || null,
+      banner_url: bannerUrl || null,
+      banner_type: bannerType,
     });
   };
 
@@ -844,6 +853,16 @@ const AboutTab = ({ data, onSave, uploadImage }: {
     const url = await uploadImage(file, "about");
     if (url) setProfileUrl(url);
     setUploading(false);
+  };
+
+  const handleBannerUpload = async (file: File) => {
+    setBannerUploading(true);
+    const url = await uploadImage(file, "banners");
+    if (url) {
+      setBannerUrl(url);
+      setBannerType(file.type.startsWith("video") ? "video" : "image");
+    }
+    setBannerUploading(false);
   };
 
   const addSkillCategory = () => setSkills([...skills, { title: "", skills: [] }]);
@@ -868,6 +887,32 @@ const AboutTab = ({ data, onSave, uploadImage }: {
             {uploading ? "Uploading..." : "Upload photo"}
             <input type="file" accept="image/*" onChange={(e) => e.target.files?.[0] && handleProfileUpload(e.target.files[0])} className="hidden" />
           </label>
+        </div>
+      </div>
+
+      <div>
+        <label className="text-xs text-white/40 uppercase tracking-[0.2em] block mb-2">Profile Banner (photo or video)</label>
+        {bannerUrl && (
+          <div className="relative mb-3 h-28 w-full overflow-hidden border border-white/10">
+            {bannerType === "video" ? (
+              <video src={bannerUrl} className="w-full h-full object-cover" autoPlay muted loop playsInline />
+            ) : (
+              <img src={bannerUrl} alt="Banner" className="w-full h-full object-cover" />
+            )}
+            <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black" />
+          </div>
+        )}
+        <div className="flex flex-wrap items-center gap-3">
+          <label className="flex items-center gap-2 border border-white/20 px-4 py-3 text-sm text-white/60 cursor-pointer hover:border-white/40 transition-colors">
+            <Upload className="w-4 h-4" />
+            {bannerUploading ? "Uploading..." : "Upload banner"}
+            <input type="file" accept="image/*,video/*" onChange={(e) => e.target.files?.[0] && handleBannerUpload(e.target.files[0])} className="hidden" />
+          </label>
+          {bannerUrl && (
+            <button type="button" onClick={() => setBannerUrl("")} className="border border-white/20 px-4 py-3 text-sm text-white/50 hover:text-white transition-colors">
+              Remove
+            </button>
+          )}
         </div>
       </div>
 

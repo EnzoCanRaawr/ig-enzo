@@ -18,8 +18,8 @@ const VerifiedBadge = () => (
 
 const Stat = ({ value, label }: { value: number | string; label: string }) => (
   <div className="text-center md:text-left">
-    <span className="text-white font-semibold text-base md:text-lg">{value}</span>
-    <span className="text-white/50 text-xs md:text-sm ml-1.5">{label}</span>
+    <span className="text-white font-semibold text-sm md:text-lg">{value}</span>
+    <span className="text-white/50 text-[11px] md:text-sm ml-1">{label}</span>
   </div>
 );
 
@@ -40,6 +40,8 @@ const ProfileHeader = ({
   avatarSlot,
   musicUrl,
   musicTitle,
+  bannerUrl,
+  bannerType,
 }: {
   username: string;
   displayName: string;
@@ -57,7 +59,10 @@ const ProfileHeader = ({
   avatarSlot?: ReactNode;
   musicUrl?: string | null;
   musicTitle?: string | null;
+  bannerUrl?: string | null;
+  bannerType?: string | null;
 }) => {
+
   const [following, setFollowing] = useState(false);
   const [soundOn, setSoundOn] = useState(false);
   const profileEmbed = getMusicEmbed(musicUrl || null);
@@ -97,13 +102,40 @@ const ProfileHeader = ({
     </button>
   ) : null;
 
+  const hasBanner = !!bannerUrl;
+  const isBannerVideo = bannerType === "video";
+
   return (
     <motion.header
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6 }}
-      className="pt-6 pb-8 md:pt-24 md:pb-14"
+      className={`relative pb-8 md:pb-14 ${
+        hasBanner ? "pt-[110px] sm:pt-[150px] md:pt-[220px]" : "pt-6 md:pt-24"
+      }`}
     >
+      {/* Full-bleed banner behind the profile */}
+      {hasBanner && (
+        <div
+          className="absolute top-0 left-1/2 -translate-x-1/2 w-screen max-w-[100vw] h-[190px] sm:h-[250px] md:h-[340px] overflow-hidden z-0 pointer-events-none select-none"
+          aria-hidden="true"
+        >
+          {isBannerVideo ? (
+            <video
+              src={bannerUrl!}
+              className="w-full h-full object-cover"
+              autoPlay
+              muted
+              loop
+              playsInline
+            />
+          ) : (
+            <img src={bannerUrl!} alt="" className="w-full h-full object-cover" draggable={false} />
+          )}
+          <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/50 to-black" />
+        </div>
+      )}
+
       {/* Hidden profile audio player */}
       {hasSound && soundOn && (
         <iframe
@@ -116,8 +148,9 @@ const ProfileHeader = ({
         />
       )}
 
-      <div className="flex flex-row items-center md:items-start gap-5 md:gap-14">
+      <div className="relative z-10 flex flex-row items-center md:items-start gap-4 sm:gap-5 md:gap-14">
         {/* Avatar with story ring */}
+
         <div className="flex-shrink-0">
           {avatarSlot ?? (
             <div className="p-[3px] rounded-full bg-white/15">
@@ -166,7 +199,7 @@ const ProfileHeader = ({
           </div>
 
           {/* Stats */}
-          <div className="flex items-center gap-4 md:gap-7">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 md:gap-7">
             <Stat value={postCount} label="posts" />
             <Stat value="1.4K" label="followers" />
             <Stat value={likeCount} label="likes" />
@@ -176,7 +209,7 @@ const ProfileHeader = ({
       </div>
 
       {/* Bio — full width below, like Instagram */}
-      <div className="mt-4 md:mt-6 space-y-1">
+      <div className="relative z-10 mt-4 md:mt-6 space-y-1">
         <p className="text-sm text-white font-semibold">{displayName}</p>
         <p className="text-xs text-white/50 uppercase tracking-[0.2em]">{tagline}</p>
         {bio.map((line, i) => (
