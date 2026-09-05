@@ -40,6 +40,8 @@ const ProfileHeader = ({
   avatarSlot,
   musicUrl,
   musicTitle,
+  bannerUrl,
+  bannerType,
 }: {
   username: string;
   displayName: string;
@@ -57,7 +59,10 @@ const ProfileHeader = ({
   avatarSlot?: ReactNode;
   musicUrl?: string | null;
   musicTitle?: string | null;
+  bannerUrl?: string | null;
+  bannerType?: string | null;
 }) => {
+
   const [following, setFollowing] = useState(false);
   const [soundOn, setSoundOn] = useState(false);
   const profileEmbed = getMusicEmbed(musicUrl || null);
