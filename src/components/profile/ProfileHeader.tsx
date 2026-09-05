@@ -117,7 +117,7 @@ const ProfileHeader = ({
       {/* Full-bleed banner behind the profile */}
       {hasBanner && (
         <div
-          className="absolute top-0 left-1/2 -translate-x-1/2 w-screen max-w-[100vw] h-[190px] sm:h-[250px] md:h-[340px] overflow-hidden -z-10 pointer-events-none select-none"
+          className="absolute top-0 left-1/2 -translate-x-1/2 w-screen max-w-[100vw] h-[190px] sm:h-[250px] md:h-[340px] overflow-hidden z-0 pointer-events-none select-none"
           aria-hidden="true"
         >
           {isBannerVideo ? (
@@ -148,7 +148,7 @@ const ProfileHeader = ({
         />
       )}
 
-      <div className="relative flex flex-row items-center md:items-start gap-4 sm:gap-5 md:gap-14">
+      <div className="relative z-10 flex flex-row items-center md:items-start gap-4 sm:gap-5 md:gap-14">
         {/* Avatar with story ring */}
 
         <div className="flex-shrink-0">
@@ -209,7 +209,7 @@ const ProfileHeader = ({
       </div>
 
       {/* Bio — full width below, like Instagram */}
-      <div className="mt-4 md:mt-6 space-y-1">
+      <div className="relative z-10 mt-4 md:mt-6 space-y-1">
         <p className="text-sm text-white font-semibold">{displayName}</p>
         <p className="text-xs text-white/50 uppercase tracking-[0.2em]">{tagline}</p>
         {bio.map((line, i) => (
