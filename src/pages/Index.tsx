@@ -10,7 +10,6 @@ import StoryAvatar from "@/components/profile/StoryAvatar";
 import { Post, isVideoPost } from "@/components/profile/postTypes";
 import Works from "@/components/Works";
 import Admin from "@/components/Admin";
-import MobileNav, { MobileNavId } from "@/components/profile/MobileNav";
 
 type ProfileData = {
   bio_paragraphs: string[];
@@ -23,6 +22,8 @@ type ProfileData = {
   github_url?: string | null;
   instagram_url?: string | null;
   facebook_url?: string | null;
+  banner_url?: string | null;
+  banner_type?: string | null;
 };
 
 const tabs = [
@@ -123,6 +124,8 @@ const Index = () => {
           avatarSlot={<StoryAvatar username={username} avatarUrl={avatarUrl} displayName={displayName} />}
           musicUrl={profileTrack?.music_url}
           musicTitle={profileTrack?.music_title}
+          bannerUrl={profile?.banner_url}
+          bannerType={profile?.banner_type}
         />
 
 
