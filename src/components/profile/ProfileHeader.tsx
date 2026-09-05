@@ -148,17 +148,16 @@ const ProfileHeader = ({
         />
       )}
 
-      <div className="relative z-10 flex flex-row items-center md:items-start gap-4 sm:gap-5 md:gap-14">
+      <div className="relative z-10 flex flex-row items-center md:items-start gap-4 sm:gap-5 md:gap-16">
         {/* Avatar with story ring */}
-
-        <div className="flex-shrink-0">
+        <div className="flex-shrink-0 md:w-[290px] md:flex md:justify-center">
           {avatarSlot ?? (
             <div className="p-[3px] rounded-full bg-white/15">
               <div className="p-[3px] rounded-full bg-black">
                 <img
                   src={avatarUrl}
                   alt={displayName}
-                  className="w-[86px] h-[86px] md:w-36 md:h-36 rounded-full object-cover select-none pointer-events-none"
+                  className="w-[86px] h-[86px] md:w-[168px] md:h-[168px] rounded-full object-cover select-none pointer-events-none"
                   draggable={false}
                   onContextMenu={(e) => e.preventDefault()}
                 />
@@ -169,12 +168,12 @@ const ProfileHeader = ({
 
         <div className="flex-1 min-w-0">
           {/* Username row */}
-          <div className="flex flex-wrap items-center gap-2 md:gap-4 mb-3 md:mb-5">
-            <h1 className="text-lg md:text-2xl text-white font-light tracking-wide flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2 md:gap-3 mb-3 md:mb-5">
+            <h1 className="text-lg md:text-xl text-white font-light tracking-wide flex items-center gap-2">
               {username}
               <VerifiedBadge />
             </h1>
-            <div className="hidden md:flex items-center gap-3">
+            <div className="hidden md:flex items-center gap-2">
               <button
                 type="button"
                 onClick={toggleFollow}
@@ -199,17 +198,51 @@ const ProfileHeader = ({
           </div>
 
           {/* Stats */}
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 md:gap-7">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 md:gap-10">
             <Stat value={postCount} label="posts" />
             <Stat value="1.4K" label="followers" />
             <Stat value={likeCount} label="likes" />
             <Stat value={commentCount} label="comments" />
           </div>
+
+          {/* Desktop bio lives in the right column, Instagram web style */}
+          <div className="hidden md:block mt-6 space-y-1">
+            <p className="text-sm text-white font-semibold">{displayName}</p>
+            <p className="text-[11px] text-white/50 uppercase tracking-[0.2em]">{tagline}</p>
+            {bio.map((line, i) => (
+              <p key={i} className="text-sm text-white/80 leading-relaxed max-w-lg">{line}</p>
+            ))}
+            {websiteUrl && (
+              <a
+                href={websiteUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 text-sm text-sky-400 hover:text-sky-300 transition-colors"
+              >
+                <LinkIcon className="w-3.5 h-3.5" />
+                {websiteUrl.replace(/^https?:\/\//, "")}
+              </a>
+            )}
+            <div className="flex items-center gap-4 pt-3">
+              {socialLinks.map((link) => (
+                <a
+                  key={link.label}
+                  href={link.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-white/40 hover:text-white transition-colors"
+                  aria-label={link.label}
+                >
+                  <link.icon className="w-4 h-4" strokeWidth={1.5} />
+                </a>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Bio — full width below, like Instagram */}
-      <div className="relative z-10 mt-4 md:mt-6 space-y-1">
+      {/* Mobile bio — full width below */}
+      <div className="md:hidden relative z-10 mt-4 space-y-1">
         <p className="text-sm text-white font-semibold">{displayName}</p>
         <p className="text-xs text-white/50 uppercase tracking-[0.2em]">{tagline}</p>
         {bio.map((line, i) => (
@@ -227,8 +260,7 @@ const ProfileHeader = ({
           </a>
         )}
 
-        {/* Mobile: full-width Instagram-style actions */}
-        <div className="md:hidden pt-4 space-y-2">
+        <div className="pt-4 space-y-2">
           <div className="flex items-center gap-2">
             <button
               type="button"
@@ -253,7 +285,6 @@ const ProfileHeader = ({
           {soundButton}
         </div>
 
-        {/* Socials */}
         <div className="flex items-center gap-5 pt-4">
           {socialLinks.map((link) => (
             <a
@@ -264,11 +295,12 @@ const ProfileHeader = ({
               className="text-white/40 hover:text-white transition-colors"
               aria-label={link.label}
             >
-              <link.icon className="w-5 h-5 md:w-4 md:h-4" strokeWidth={1.5} />
+              <link.icon className="w-5 h-5" strokeWidth={1.5} />
             </a>
           ))}
         </div>
       </div>
+
     </motion.header>
   );
 };
