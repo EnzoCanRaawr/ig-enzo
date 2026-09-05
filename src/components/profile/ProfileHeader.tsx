@@ -18,8 +18,8 @@ const VerifiedBadge = () => (
 
 const Stat = ({ value, label }: { value: number | string; label: string }) => (
   <div className="text-center md:text-left">
-    <span className="text-white font-semibold text-base md:text-lg">{value}</span>
-    <span className="text-white/50 text-xs md:text-sm ml-1.5">{label}</span>
+    <span className="text-white font-semibold text-sm md:text-lg">{value}</span>
+    <span className="text-white/50 text-[11px] md:text-sm ml-1">{label}</span>
   </div>
 );
 
@@ -199,7 +199,7 @@ const ProfileHeader = ({
           </div>
 
           {/* Stats */}
-          <div className="flex items-center gap-4 md:gap-7">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 md:gap-7">
             <Stat value={postCount} label="posts" />
             <Stat value="1.4K" label="followers" />
             <Stat value={likeCount} label="likes" />
