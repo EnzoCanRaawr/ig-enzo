@@ -1,0 +1,1 @@
+ALTER TABLE public.about_content ADD COLUMN IF NOT EXISTS profile_music_url text, ADD COLUMN IF NOT EXISTS profile_music_title text;

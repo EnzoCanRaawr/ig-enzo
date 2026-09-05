@@ -26,6 +26,8 @@ export type Database = {
           id: string
           instagram_url: string | null
           profile_image_url: string | null
+          profile_music_title: string | null
+          profile_music_url: string | null
           skills: Json | null
           tagline: string | null
           updated_at: string
@@ -43,6 +45,8 @@ export type Database = {
           id?: string
           instagram_url?: string | null
           profile_image_url?: string | null
+          profile_music_title?: string | null
+          profile_music_url?: string | null
           skills?: Json | null
           tagline?: string | null
           updated_at?: string
@@ -60,6 +64,8 @@ export type Database = {
           id?: string
           instagram_url?: string | null
           profile_image_url?: string | null
+          profile_music_title?: string | null
+          profile_music_url?: string | null
           skills?: Json | null
           tagline?: string | null
           updated_at?: string
