@@ -108,7 +108,7 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-black text-white">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 pb-16 md:pb-24">
+      <div className="max-w-[975px] mx-auto px-4 sm:px-6 pb-16 md:pb-24">
         <ProfileHeader
           username={username}
           displayName={displayName}
@@ -134,7 +134,7 @@ const Index = () => {
 
 
         {/* Tabs */}
-        <nav className="border-t border-white/10 flex items-center justify-center gap-8 sm:gap-14">
+        <nav className="border-t border-white/10 flex items-center justify-center gap-8 sm:gap-14 md:sticky md:top-0 md:z-20 md:bg-black/90 md:backdrop-blur">
           {tabs.map((t) => (
             <button
               key={t.id}
