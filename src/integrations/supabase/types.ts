@@ -25,6 +25,8 @@ export type Database = {
           github_url: string | null
           id: string
           instagram_url: string | null
+          note_created_at: string | null
+          note_text: string | null
           profile_image_url: string | null
           profile_music_title: string | null
           profile_music_url: string | null
@@ -44,6 +46,8 @@ export type Database = {
           github_url?: string | null
           id?: string
           instagram_url?: string | null
+          note_created_at?: string | null
+          note_text?: string | null
           profile_image_url?: string | null
           profile_music_title?: string | null
           profile_music_url?: string | null
@@ -63,6 +67,8 @@ export type Database = {
           github_url?: string | null
           id?: string
           instagram_url?: string | null
+          note_created_at?: string | null
+          note_text?: string | null
           profile_image_url?: string | null
           profile_music_title?: string | null
           profile_music_url?: string | null
