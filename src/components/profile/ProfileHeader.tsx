@@ -111,13 +111,13 @@ const ProfileHeader = ({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6 }}
       className={`relative pb-8 md:pb-14 ${
-        hasBanner ? "pt-[110px] sm:pt-[150px] md:pt-[220px]" : "pt-6 md:pt-24"
+        hasBanner ? "pt-[38vw] sm:pt-[34vw] md:pt-[26vw] lg:pt-[22vw]" : "pt-6 md:pt-24"
       }`}
     >
-      {/* Full-bleed banner behind the profile */}
+      {/* Full-bleed banner behind the profile — keeps its aspect on every screen */}
       {hasBanner && (
         <div
-          className="absolute top-0 left-1/2 -translate-x-1/2 w-screen max-w-[100vw] h-[190px] sm:h-[250px] md:h-[340px] overflow-hidden z-0 pointer-events-none select-none"
+          className="absolute top-0 left-1/2 -translate-x-1/2 w-screen max-w-[100vw] aspect-[9/16] sm:aspect-[16/9] md:aspect-[21/9] max-h-[70vh] overflow-hidden z-0 pointer-events-none select-none"
           aria-hidden="true"
         >
           {isBannerVideo ? (
