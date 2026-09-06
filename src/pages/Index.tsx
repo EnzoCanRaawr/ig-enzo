@@ -26,6 +26,8 @@ type ProfileData = {
   banner_type?: string | null;
   profile_music_url?: string | null;
   profile_music_title?: string | null;
+  note_text?: string | null;
+  note_created_at?: string | null;
 };
 
 const tabs = [
@@ -123,7 +125,15 @@ const Index = () => {
           postCount={posts.length}
           likeCount={totals.likes}
           commentCount={totals.comments}
-          avatarSlot={<StoryAvatar username={username} avatarUrl={avatarUrl} displayName={displayName} />}
+          avatarSlot={
+            <StoryAvatar
+              username={username}
+              avatarUrl={avatarUrl}
+              displayName={displayName}
+              noteText={profile?.note_text}
+              noteCreatedAt={profile?.note_created_at}
+            />
+          }
           musicUrl={profile?.profile_music_url || profileTrack?.music_url}
           musicTitle={profile?.profile_music_title || profileTrack?.music_title}
           bannerUrl={profile?.banner_url}

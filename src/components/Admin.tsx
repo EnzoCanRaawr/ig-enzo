@@ -49,6 +49,8 @@ type AboutContent = {
   banner_type?: string | null;
   profile_music_url?: string | null;
   profile_music_title?: string | null;
+  note_text?: string | null;
+  note_created_at?: string | null;
 };
 
 type Comment = {
@@ -810,6 +812,7 @@ const AboutTab = ({ data, onSave, uploadImage }: {
   const [bannerType, setBannerType] = useState("image");
   const [musicUrlVal, setMusicUrlVal] = useState("");
   const [musicTitleVal, setMusicTitleVal] = useState("");
+  const [noteVal, setNoteVal] = useState("");
   const [uploading, setUploading] = useState(false);
   const [bannerUploading, setBannerUploading] = useState(false);
   const [initialized, setInitialized] = useState(false);
@@ -831,6 +834,7 @@ const AboutTab = ({ data, onSave, uploadImage }: {
       setBannerType(data.banner_type || "image");
       setMusicUrlVal(data.profile_music_url || "");
       setMusicTitleVal(data.profile_music_title || "");
+      setNoteVal(data.note_text || "");
       setInitialized(true);
     }
   }, [data, initialized]);
@@ -853,6 +857,8 @@ const AboutTab = ({ data, onSave, uploadImage }: {
       banner_type: bannerType,
       profile_music_url: musicUrlVal || null,
       profile_music_title: musicTitleVal || null,
+      note_text: noteVal.trim() || null,
+      note_created_at: noteVal.trim() ? new Date().toISOString() : null,
     });
   };
 
@@ -949,6 +955,13 @@ const AboutTab = ({ data, onSave, uploadImage }: {
           className="w-full bg-transparent border border-white/20 px-4 py-3 text-sm text-white focus:border-white/50 outline-none" />
         <input type="text" value={musicTitleVal} onChange={(e) => setMusicTitleVal(e.target.value)} placeholder="Track name shown on the button"
           className="w-full bg-transparent border border-white/20 px-4 py-3 text-sm text-white focus:border-white/50 outline-none" />
+      </div>
+
+      <div className="space-y-2">
+        <label className="text-xs text-white/40 uppercase tracking-[0.2em] block">Note (small bubble on your profile, lasts 24 hours)</label>
+        <input type="text" maxLength={60} value={noteVal} onChange={(e) => setNoteVal(e.target.value)} placeholder="What's on your mind?"
+          className="w-full bg-transparent border border-white/20 px-4 py-3 text-sm text-white focus:border-white/50 outline-none" />
+        <p className="text-[11px] text-white/30">{noteVal.length}/60 — leave empty to remove the note.</p>
       </div>
 
       <div>
