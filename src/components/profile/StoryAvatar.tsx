@@ -149,14 +149,44 @@ const StoryAvatar = ({
     <>
       <div className="relative">
         {noteFresh && (
-          <div className="absolute -top-3 md:-top-5 left-1/2 -translate-x-1/2 md:left-auto md:translate-x-0 md:-right-6 z-20 pointer-events-none">
-            <div className="relative max-w-[150px] rounded-2xl bg-white text-black px-3 py-1.5 shadow-lg">
-              <p className="text-[11px] md:text-xs leading-snug break-words">{noteText}</p>
-              <span className="absolute -bottom-1 left-4 w-2.5 h-2.5 rounded-full bg-white" />
-              <span className="absolute -bottom-3 left-2 w-1.5 h-1.5 rounded-full bg-white" />
+          <div className="absolute -top-2 md:-top-4 left-1/2 -translate-x-1/2 md:left-auto md:translate-x-0 md:-right-8 z-20 max-w-[70vw]">
+            <div
+              className={`relative w-max max-w-[150px] sm:max-w-[190px] md:max-w-[230px] rounded-2xl px-3 py-1.5 shadow-lg ${bubbleClass}`}
+              style={bubbleStyle}
+            >
+              {noteImageUrl && (
+                <img
+                  src={noteImageUrl}
+                  alt=""
+                  className="w-full max-h-24 object-cover rounded-xl mb-1.5 select-none"
+                  draggable={false}
+                />
+              )}
+              <p className="text-[11px] md:text-xs leading-snug break-words whitespace-pre-wrap">{noteText}</p>
+              {noteEmbed?.embedUrl && (
+                <button
+                  type="button"
+                  onClick={() => setNotePlaying((p) => !p)}
+                  className="mt-1.5 flex items-center gap-1.5 text-[10px] md:text-[11px] font-medium opacity-80 hover:opacity-100"
+                >
+                  {notePlaying ? <Volume2 className="w-3 h-3" /> : <Music2 className="w-3 h-3" />}
+                  <span className="truncate max-w-[130px]">{noteMusicTitle || "Play sound"}</span>
+                </button>
+              )}
+              <span className={`absolute -bottom-1 left-4 w-2.5 h-2.5 rounded-full ${tailClass}`} style={bubbleStyle} />
+              <span className={`absolute -bottom-3 left-2 w-1.5 h-1.5 rounded-full ${tailClass}`} style={bubbleStyle} />
             </div>
+            {notePlaying && noteEmbed?.embedUrl && (
+              <iframe
+                title="Note sound"
+                src={noteEmbed.embedUrl}
+                allow="autoplay; encrypted-media"
+                className="absolute w-px h-px opacity-0 pointer-events-none"
+              />
+            )}
           </div>
         )}
+
 
         <button
           type="button"
