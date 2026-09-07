@@ -117,20 +117,20 @@ const ProfileHeader = ({
       {/* Full-bleed banner behind the profile — keeps its aspect on every screen */}
       {hasBanner && (
         <div
-          className="absolute top-0 left-1/2 -translate-x-1/2 w-screen max-w-[100vw] aspect-[9/16] sm:aspect-[16/9] md:aspect-[21/9] max-h-[70vh] overflow-hidden z-0 pointer-events-none select-none"
+          className="absolute top-0 left-1/2 -translate-x-1/2 w-screen max-w-[100vw] h-[42vw] sm:h-[36vw] md:h-[28vw] lg:h-[24vw] max-h-[70vh] overflow-hidden z-0 pointer-events-none select-none"
           aria-hidden="true"
         >
           {isBannerVideo ? (
             <video
               src={bannerUrl!}
-              className="w-full h-full object-contain"
+              className="w-full h-full object-cover"
               autoPlay
               muted
               loop
               playsInline
             />
           ) : (
-            <img src={bannerUrl!} alt="" className="w-full h-full object-contain" draggable={false} />
+            <img src={bannerUrl!} alt="" className="w-full h-full object-cover" draggable={false} />
           )}
           <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/50 to-black" />
         </div>
