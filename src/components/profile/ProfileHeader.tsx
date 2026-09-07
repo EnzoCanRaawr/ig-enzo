@@ -123,14 +123,14 @@ const ProfileHeader = ({
           {isBannerVideo ? (
             <video
               src={bannerUrl!}
-              className="w-full h-full object-cover"
+              className="w-full h-full object-contain"
               autoPlay
               muted
               loop
               playsInline
             />
           ) : (
-            <img src={bannerUrl!} alt="" className="w-full h-full object-cover" draggable={false} />
+            <img src={bannerUrl!} alt="" className="w-full h-full object-contain" draggable={false} />
           )}
           <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/50 to-black" />
         </div>
