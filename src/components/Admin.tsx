@@ -842,12 +842,18 @@ const AboutTab = ({ data, onSave, uploadImage }: {
       setMusicUrlVal(data.profile_music_url || "");
       setMusicTitleVal(data.profile_music_title || "");
       setNoteVal(data.note_text || "");
+      setNoteStyleVal((data as any).note_style || "plain");
+      setNoteColorVal((data as any).note_color || "#ffffff");
+      setNoteImageUrlVal((data as any).note_image_url || "");
+      setNoteMusicUrlVal((data as any).note_music_url || "");
+      setNoteMusicTitleVal((data as any).note_music_title || "");
       setInitialized(true);
     }
   }, [data, initialized]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const hasNote = !!noteVal.trim() || !!noteImageUrlVal;
     await onSave({
       bio_paragraphs: bio.split("\n\n").map((p) => p.trim()).filter(Boolean),
       email: emailVal,
@@ -865,8 +871,13 @@ const AboutTab = ({ data, onSave, uploadImage }: {
       profile_music_url: musicUrlVal || null,
       profile_music_title: musicTitleVal || null,
       note_text: noteVal.trim() || null,
-      note_created_at: noteVal.trim() ? new Date().toISOString() : null,
-    });
+      note_created_at: hasNote ? new Date().toISOString() : null,
+      note_style: noteStyleVal,
+      note_color: noteColorVal || null,
+      note_image_url: noteImageUrlVal || null,
+      note_music_url: noteMusicUrlVal || null,
+      note_music_title: noteMusicTitleVal || null,
+    } as any);
   };
 
   const handleProfileUpload = async (file: File) => {
@@ -875,6 +886,14 @@ const AboutTab = ({ data, onSave, uploadImage }: {
     if (url) setProfileUrl(url);
     setUploading(false);
   };
+
+  const handleNoteImageUpload = async (file: File) => {
+    setNoteImgUploading(true);
+    const url = await uploadImage(file, "notes");
+    if (url) setNoteImageUrlVal(url);
+    setNoteImgUploading(false);
+  };
+
 
   const handleBannerUpload = async (file: File) => {
     setBannerUploading(true);
