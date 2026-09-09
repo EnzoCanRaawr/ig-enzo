@@ -813,6 +813,13 @@ const AboutTab = ({ data, onSave, uploadImage }: {
   const [musicUrlVal, setMusicUrlVal] = useState("");
   const [musicTitleVal, setMusicTitleVal] = useState("");
   const [noteVal, setNoteVal] = useState("");
+  const [noteStyleVal, setNoteStyleVal] = useState("plain");
+  const [noteColorVal, setNoteColorVal] = useState("#ffffff");
+  const [noteImageUrlVal, setNoteImageUrlVal] = useState("");
+  const [noteMusicUrlVal, setNoteMusicUrlVal] = useState("");
+  const [noteMusicTitleVal, setNoteMusicTitleVal] = useState("");
+  const [noteImgUploading, setNoteImgUploading] = useState(false);
+
   const [uploading, setUploading] = useState(false);
   const [bannerUploading, setBannerUploading] = useState(false);
   const [initialized, setInitialized] = useState(false);
