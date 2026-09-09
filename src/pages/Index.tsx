@@ -28,6 +28,11 @@ type ProfileData = {
   profile_music_title?: string | null;
   note_text?: string | null;
   note_created_at?: string | null;
+  note_style?: string | null;
+  note_color?: string | null;
+  note_image_url?: string | null;
+  note_music_url?: string | null;
+  note_music_title?: string | null;
 };
 
 const tabs = [
@@ -132,6 +137,11 @@ const Index = () => {
               displayName={displayName}
               noteText={profile?.note_text}
               noteCreatedAt={profile?.note_created_at}
+              noteStyle={profile?.note_style}
+              noteColor={profile?.note_color}
+              noteImageUrl={profile?.note_image_url}
+              noteMusicUrl={profile?.note_music_url}
+              noteMusicTitle={profile?.note_music_title}
             />
           }
           musicUrl={profile?.profile_music_url || profileTrack?.music_url}
