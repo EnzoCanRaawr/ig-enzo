@@ -14,6 +14,13 @@ export type Story = {
   expires_at: string;
 };
 
+const timeAgoShort = (iso: string) => {
+  const diff = (Date.now() - new Date(iso).getTime()) / 1000;
+  if (diff < 60) return "now";
+  if (diff < 3600) return `${Math.floor(diff / 60)}m`;
+  return `${Math.floor(diff / 3600)}h`;
+};
+
 const REACTIONS = ["❤️", "🔥", "😂", "😮", "😢", "👏"];
 const IMAGE_DURATION = 5000;
 
@@ -257,17 +264,16 @@ const StoryAvatar = ({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center"
+            className="fixed inset-0 z-[100] bg-black md:bg-black/95 flex items-center justify-center overscroll-none"
           >
-            <button
-              onClick={close}
-              className="absolute top-4 right-4 z-30 text-white/70 hover:text-white"
-              aria-label="Close story"
-            >
-              <X className="w-6 h-6" />
-            </button>
-
-            <div className="relative w-full h-full md:w-auto md:h-[92vh] md:aspect-[9/16] md:rounded-xl overflow-hidden bg-black flex flex-col">
+            <div className="relative w-full h-[100dvh] md:h-[min(92vh,880px)] md:w-auto md:aspect-[9/16] md:rounded-2xl overflow-hidden bg-black flex flex-col shadow-2xl">
+              <button
+                onClick={close}
+                className="absolute top-[max(0.75rem,env(safe-area-inset-top))] right-3 z-30 w-9 h-9 rounded-full bg-black/40 flex items-center justify-center text-white/80 hover:text-white"
+                aria-label="Close story"
+              >
+                <X className="w-5 h-5" />
+              </button>
               {/* Media fills the frame */}
               <div className="absolute inset-0">
                 {active.media_type === "video" ? (
@@ -285,7 +291,7 @@ const StoryAvatar = ({
                     }}
                     onPause={() => videoRef.current?.play().catch(() => {})}
                     onContextMenu={(e) => e.preventDefault()}
-                    className="w-full h-full object-contain pointer-events-none"
+                    className="w-full h-full object-contain md:object-contain pointer-events-none"
                   />
                 ) : (
                   <img
@@ -302,17 +308,17 @@ const StoryAvatar = ({
               <button
                 onClick={prev}
                 aria-label="Previous story"
-                className="absolute left-0 top-16 bottom-32 w-1/3 z-10"
+                className="absolute left-0 top-20 bottom-28 w-1/3 z-10"
               />
               <button
                 onClick={next}
                 aria-label="Next story"
-                className="absolute right-0 top-16 bottom-32 w-1/3 z-10"
+                className="absolute right-0 top-20 bottom-28 w-2/3 z-10"
               />
 
               {/* Top gradient + progress + header */}
-              <div className="relative z-20 bg-gradient-to-b from-black/70 to-transparent pb-8">
-                <div className="flex gap-1 px-3 pt-4">
+              <div className="relative z-20 bg-gradient-to-b from-black/75 to-transparent pb-8 pt-[env(safe-area-inset-top)]">
+                <div className="flex gap-1 px-3 pt-3">
                   {stories.map((_, i) => (
                     <span key={i} className="h-0.5 flex-1 rounded-full bg-white/25 overflow-hidden">
                       <span
@@ -326,17 +332,15 @@ const StoryAvatar = ({
                   ))}
                 </div>
 
-                <div className="flex items-center gap-3 px-4 py-3">
-                  <img src={avatarUrl} alt={username} className="w-8 h-8 rounded-full object-cover" />
-                  <span className="text-sm text-white font-medium">{username}</span>
-                  <span className="text-xs text-white/50">
-                    {new Date(active.created_at).toLocaleDateString()}
-                  </span>
+                <div className="flex items-center gap-2.5 px-3 md:px-4 py-2.5">
+                  <img src={avatarUrl} alt={username} className="w-8 h-8 rounded-full object-cover flex-shrink-0" />
+                  <span className="text-sm text-white font-semibold truncate max-w-[45%]">{username}</span>
+                  <span className="text-[11px] text-white/50 flex-shrink-0">{timeAgoShort(active.created_at)}</span>
                   {active.media_type === "video" && (
                     <button
                       onClick={() => setMuted((m) => !m)}
                       aria-label={muted ? "Unmute story" : "Mute story"}
-                      className="ml-auto mr-8 w-8 h-8 rounded-full bg-white/15 hover:bg-white/25 flex items-center justify-center text-white"
+                      className="ml-auto mr-11 w-8 h-8 rounded-full bg-white/15 hover:bg-white/25 flex items-center justify-center text-white"
                     >
                       {muted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
                     </button>
@@ -347,17 +351,17 @@ const StoryAvatar = ({
               <div className="flex-1" />
 
               {/* Bottom: caption + reactions */}
-              <div className="relative z-20 bg-gradient-to-t from-black/80 to-transparent pt-10 pb-5 px-4">
+              <div className="relative z-20 bg-gradient-to-t from-black/85 to-transparent pt-10 px-3 md:px-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
                 {active.caption && (
-                  <p className="text-sm text-white/90 text-center mb-4">{active.caption}</p>
+                  <p className="text-sm text-white/90 text-center mb-3 line-clamp-3">{active.caption}</p>
                 )}
-                <div className="flex items-center justify-center gap-1.5 flex-wrap">
+                <div className="flex items-center justify-center gap-1.5 overflow-x-auto no-scrollbar">
                   {REACTIONS.map((emoji) => (
                     <button
                       key={emoji}
                       onClick={() => react(emoji)}
                       aria-label={`React ${emoji}`}
-                      className={`flex items-center gap-1 rounded-full px-3 py-2 text-base leading-none transition-all ${
+                      className={`flex-shrink-0 flex items-center gap-1 rounded-full px-2.5 sm:px-3 py-2 text-base leading-none transition-all ${
                         myReaction === emoji ? "bg-white/25 scale-110" : "bg-white/10 hover:bg-white/20"
                       }`}
                     >
@@ -374,19 +378,21 @@ const StoryAvatar = ({
             {index > 0 && (
               <button
                 onClick={prev}
-                className="hidden md:block absolute left-6 text-white/50 hover:text-white z-30"
+                className="hidden md:flex absolute left-4 lg:left-10 top-1/2 -translate-y-1/2 w-10 h-10 items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-white z-30"
                 aria-label="Previous story"
               >
-                <ChevronLeft className="w-8 h-8" />
+                <ChevronLeft className="w-6 h-6" />
               </button>
             )}
-            <button
-              onClick={next}
-              className="hidden md:block absolute right-6 text-white/50 hover:text-white z-30"
-              aria-label="Next story"
-            >
-              <ChevronRight className="w-8 h-8" />
-            </button>
+            {index < stories.length - 1 && (
+              <button
+                onClick={next}
+                className="hidden md:flex absolute right-4 lg:right-10 top-1/2 -translate-y-1/2 w-10 h-10 items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-white z-30"
+                aria-label="Next story"
+              >
+                <ChevronRight className="w-6 h-6" />
+              </button>
+            )}
           </motion.div>
         )}
       </AnimatePresence>
