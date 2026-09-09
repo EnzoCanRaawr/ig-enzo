@@ -6,7 +6,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { getMusicEmbed } from "@/lib/music";
-import { Post, PostComment, postMedia, isVideoPost, getSessionId, timeAgo } from "./postTypes";
+import { Post, PostComment, postMedia, isVideoPost, isVideoUrl, getSessionId, timeAgo } from "./postTypes";
 import { toast } from "sonner";
 
 const PostLightbox = ({
@@ -49,6 +49,8 @@ const PostLightbox = ({
   const [commentName, setCommentName] = useState("");
   const [commentText, setCommentText] = useState("");
   const sessionId = getSessionId();
+  const activeUrl = media[slide] ?? media[0];
+  const activeIsVideo = isVideoUrl(activeUrl) || (isVideo && media.length === 1);
 
   // Reset per post; audio starts automatically when the post has a track
   useEffect(() => {
@@ -279,12 +281,12 @@ const PostLightbox = ({
             ref={mediaWrapRef}
             className="relative bg-black flex items-center justify-center flex-shrink-0 aspect-square w-full"
           >
-            {isVideo ? (
+            {activeIsVideo ? (
               <>
                 <video
                   ref={videoRef}
-                  key={post.id}
-                  src={media[0]}
+                  key={`${post.id}-${slide}`}
+                  src={activeUrl}
                   className={isFullscreen ? "w-screen h-screen object-contain" : "w-full h-full object-contain"}
                   autoPlay
                   loop
@@ -298,7 +300,7 @@ const PostLightbox = ({
                 />
                 <button
                   onClick={(e) => { e.stopPropagation(); setMuted((m) => !m); }}
-                  className="absolute bottom-3 right-3 p-2 rounded-full bg-black/60 hover:bg-black/80 text-white transition-colors"
+                  className="absolute bottom-3 right-3 md:bottom-4 md:right-4 p-2 rounded-full bg-black/60 hover:bg-black/80 text-white transition-colors"
                   aria-label={muted ? "Unmute" : "Mute"}
                 >
                   {muted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
@@ -306,20 +308,20 @@ const PostLightbox = ({
               </>
             ) : (
               <img
-                src={media[slide]}
+                src={activeUrl}
                 alt={post.title || "Post"}
                 className={isFullscreen ? "w-screen h-screen object-contain" : "w-full h-full object-contain"}
                 draggable={false}
               />
             )}
 
-            {!isVideo && media.length > 1 && (
+            {media.length > 1 && (
               <>
                 {slide > 0 && (
                   <button
                     onClick={(e) => { e.stopPropagation(); setSlide((s) => s - 1); }}
-                    className="absolute left-2.5 top-1/2 -translate-y-1/2 w-7 h-7 flex items-center justify-center rounded-full bg-white text-black"
-                    aria-label="Previous image"
+                    className="absolute left-2.5 md:left-3 top-1/2 -translate-y-1/2 z-10 w-8 h-8 md:w-9 md:h-9 flex items-center justify-center rounded-full bg-white/95 text-black shadow hover:bg-white"
+                    aria-label="Previous item"
                   >
                     <ChevronLeft className="w-4 h-4" />
                   </button>
@@ -327,8 +329,8 @@ const PostLightbox = ({
                 {slide < media.length - 1 && (
                   <button
                     onClick={(e) => { e.stopPropagation(); setSlide((s) => s + 1); }}
-                    className="absolute right-2.5 top-1/2 -translate-y-1/2 w-7 h-7 flex items-center justify-center rounded-full bg-white text-black"
-                    aria-label="Next image"
+                    className="absolute right-2.5 md:right-3 top-1/2 -translate-y-1/2 z-10 w-8 h-8 md:w-9 md:h-9 flex items-center justify-center rounded-full bg-white/95 text-black shadow hover:bg-white"
+                    aria-label="Next item"
                   >
                     <ChevronRight className="w-4 h-4" />
                   </button>
@@ -336,6 +338,16 @@ const PostLightbox = ({
                 <span className="absolute top-3 right-3 px-2 py-0.5 rounded-full bg-black/60 text-white text-[11px]">
                   {slide + 1}/{media.length}
                 </span>
+                <div className="absolute bottom-12 md:bottom-14 left-1/2 -translate-x-1/2 flex items-center gap-1.5">
+                  {media.map((_, i) => (
+                    <button
+                      key={i}
+                      onClick={(e) => { e.stopPropagation(); setSlide(i); }}
+                      aria-label={`Go to item ${i + 1}`}
+                      className={`w-1.5 h-1.5 rounded-full ${i === slide ? "bg-white" : "bg-white/35"}`}
+                    />
+                  ))}
+                </div>
               </>
             )}
 
@@ -362,13 +374,6 @@ const PostLightbox = ({
           {/* Actions + meta */}
           <div className="px-3 pt-2.5">
             <ActionBar />
-            {!isVideo && media.length > 1 && (
-              <div className="flex items-center justify-center gap-1.5 py-2">
-                {media.map((_, i) => (
-                  <span key={i} className={`w-1.5 h-1.5 rounded-full ${i === slide ? "bg-sky-400" : "bg-white/25"}`} />
-                ))}
-              </div>
-            )}
             <LikeMeta />
           </div>
 
@@ -456,12 +461,12 @@ const PostLightbox = ({
         >
           {/* duplicate media wrapper ref handling: use a nested div with the ref for fullscreen */}
           <div ref={mediaWrapRef} className="absolute inset-0 flex items-center justify-center">
-            {isVideo ? (
+            {activeIsVideo ? (
               <>
                 <video
                   ref={videoRef}
-                  key={post.id}
-                  src={media[0]}
+                  key={`${post.id}-${slide}`}
+                  src={activeUrl}
                   className={isFullscreen ? "w-screen h-screen object-contain" : "w-full h-full object-contain"}
                   autoPlay
                   loop
@@ -475,7 +480,7 @@ const PostLightbox = ({
                 />
                 <button
                   onClick={(e) => { e.stopPropagation(); setMuted((m) => !m); }}
-                  className="absolute bottom-4 right-4 p-2 rounded-full bg-black/60 hover:bg-black/80 text-white transition-colors"
+                  className="absolute bottom-3 right-3 md:bottom-4 md:right-4 p-2 rounded-full bg-black/60 hover:bg-black/80 text-white transition-colors"
                   aria-label={muted ? "Unmute" : "Mute"}
                 >
                   {muted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
@@ -483,20 +488,20 @@ const PostLightbox = ({
               </>
             ) : (
               <img
-                src={media[slide]}
+                src={activeUrl}
                 alt={post.title || "Post"}
                 className={isFullscreen ? "w-screen h-screen object-contain" : "w-full h-full object-contain"}
                 draggable={false}
               />
             )}
 
-            {!isVideo && media.length > 1 && (
+            {media.length > 1 && (
               <>
                 {slide > 0 && (
                   <button
                     onClick={(e) => { e.stopPropagation(); setSlide((s) => s - 1); }}
-                    className="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center rounded-full bg-white text-black hover:bg-white/80"
-                    aria-label="Previous image"
+                    className="absolute left-2.5 md:left-3 top-1/2 -translate-y-1/2 z-10 w-8 h-8 md:w-9 md:h-9 flex items-center justify-center rounded-full bg-white/95 text-black shadow hover:bg-white"
+                    aria-label="Previous item"
                   >
                     <ChevronLeft className="w-4 h-4" />
                   </button>
@@ -504,15 +509,23 @@ const PostLightbox = ({
                 {slide < media.length - 1 && (
                   <button
                     onClick={(e) => { e.stopPropagation(); setSlide((s) => s + 1); }}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center rounded-full bg-white text-black hover:bg-white/80"
-                    aria-label="Next image"
+                    className="absolute right-2.5 md:right-3 top-1/2 -translate-y-1/2 z-10 w-8 h-8 md:w-9 md:h-9 flex items-center justify-center rounded-full bg-white/95 text-black shadow hover:bg-white"
+                    aria-label="Next item"
                   >
                     <ChevronRight className="w-4 h-4" />
                   </button>
                 )}
-                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-1.5">
+                <span className="absolute top-3 right-3 px-2 py-0.5 rounded-full bg-black/60 text-white text-[11px]">
+                  {slide + 1}/{media.length}
+                </span>
+                <div className="absolute bottom-12 md:bottom-14 left-1/2 -translate-x-1/2 flex items-center gap-1.5">
                   {media.map((_, i) => (
-                    <span key={i} className={`w-1.5 h-1.5 rounded-full ${i === slide ? "bg-white" : "bg-white/35"}`} />
+                    <button
+                      key={i}
+                      onClick={(e) => { e.stopPropagation(); setSlide(i); }}
+                      aria-label={`Go to item ${i + 1}`}
+                      className={`w-1.5 h-1.5 rounded-full ${i === slide ? "bg-white" : "bg-white/35"}`}
+                    />
                   ))}
                 </div>
               </>
