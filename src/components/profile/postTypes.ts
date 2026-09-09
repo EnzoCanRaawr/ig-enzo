@@ -30,6 +30,9 @@ export const postMedia = (post: Post): string[] => {
   return list.length > 0 ? list : [post.image_url];
 };
 
+export const isVideoUrl = (url: string) =>
+  /\.(mp4|webm|mov|m4v|ogv|avi)(\?|#|$)/i.test(url || "");
+
 export const isVideoPost = (post: Post) => post.media_type === "video" || post.post_kind === "reel";
 
 export const getSessionId = () => {
