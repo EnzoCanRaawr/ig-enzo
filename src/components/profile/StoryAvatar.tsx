@@ -30,12 +30,22 @@ const StoryAvatar = ({
   displayName,
   noteText,
   noteCreatedAt,
+  noteStyle = "plain",
+  noteColor,
+  noteImageUrl,
+  noteMusicUrl,
+  noteMusicTitle,
 }: {
   username: string;
   avatarUrl: string;
   displayName: string;
   noteText?: string | null;
   noteCreatedAt?: string | null;
+  noteStyle?: string | null;
+  noteColor?: string | null;
+  noteImageUrl?: string | null;
+  noteMusicUrl?: string | null;
+  noteMusicTitle?: string | null;
 }) => {
   const [stories, setStories] = useState<Story[]>([]);
   const [index, setIndex] = useState<number | null>(null);
@@ -44,6 +54,34 @@ const StoryAvatar = ({
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const [myReaction, setMyReaction] = useState<string | null>(null);
   const [counts, setCounts] = useState<Record<string, number>>({});
+  const [notePlaying, setNotePlaying] = useState(false);
+  const noteEmbed = getMusicEmbed(noteMusicUrl);
+
+  const style = noteStyle || "plain";
+  const bubbleClass =
+    style === "rgb"
+      ? "note-rgb note-glow"
+      : style === "glow"
+      ? "bg-white text-black note-glow"
+      : style === "shimmer"
+      ? "note-shimmer"
+      : style === "dark"
+      ? "bg-neutral-900 text-white border border-white/20"
+      : style === "color"
+      ? "text-black"
+      : "bg-white text-black";
+  const bubbleStyle =
+    style === "color" && noteColor ? { backgroundColor: noteColor } : undefined;
+  const tailClass =
+    style === "rgb"
+      ? "note-rgb"
+      : style === "shimmer"
+      ? "note-shimmer"
+      : style === "dark"
+      ? "bg-neutral-900"
+      : style === "color"
+      ? ""
+      : "bg-white";
 
   const loadStories = useCallback(async () => {
     const { data } = await supabase
@@ -62,8 +100,9 @@ const StoryAvatar = ({
 
   const hasStories = stories.length > 0;
   const noteFresh =
-    !!noteText &&
+    (!!noteText || !!noteImageUrl) &&
     (!noteCreatedAt || Date.now() - new Date(noteCreatedAt).getTime() < 24 * 60 * 60 * 1000);
+
 
   const close = useCallback(() => setIndex(null), []);
   const next = useCallback(
