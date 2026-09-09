@@ -1,7 +1,9 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, ChevronLeft, ChevronRight, Volume2, VolumeX } from "lucide-react";
+import { X, ChevronLeft, ChevronRight, Volume2, VolumeX, Music2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { getMusicEmbed } from "@/lib/music";
+
 
 export type Story = {
   id: string;
