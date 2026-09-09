@@ -957,12 +957,53 @@ const AboutTab = ({ data, onSave, uploadImage }: {
           className="w-full bg-transparent border border-white/20 px-4 py-3 text-sm text-white focus:border-white/50 outline-none" />
       </div>
 
-      <div className="space-y-2">
+      <div className="space-y-3">
         <label className="text-xs text-white/40 uppercase tracking-[0.2em] block">Note (small bubble on your profile, lasts 24 hours)</label>
-        <input type="text" maxLength={60} value={noteVal} onChange={(e) => setNoteVal(e.target.value)} placeholder="What's on your mind?"
+        <input type="text" maxLength={80} value={noteVal} onChange={(e) => setNoteVal(e.target.value)} placeholder="What's on your mind?"
           className="w-full bg-transparent border border-white/20 px-4 py-3 text-sm text-white focus:border-white/50 outline-none" />
-        <p className="text-[11px] text-white/30">{noteVal.length}/60 — leave empty to remove the note.</p>
+        <p className="text-[11px] text-white/30">{noteVal.length}/80 — leave empty to remove the note.</p>
+
+        <div className="flex flex-wrap gap-2">
+          {[
+            { id: "plain", label: "White" },
+            { id: "dark", label: "Dark" },
+            { id: "color", label: "My colour" },
+            { id: "rgb", label: "RGB" },
+            { id: "glow", label: "Glow" },
+            { id: "shimmer", label: "Shimmer" },
+          ].map((s) => (
+            <button key={s.id} type="button" onClick={() => setNoteStyleVal(s.id)}
+              className={`px-3 py-1.5 text-xs border ${noteStyleVal === s.id ? "border-white bg-white/15 text-white" : "border-white/20 text-white/60"}`}>
+              {s.label}
+            </button>
+          ))}
+        </div>
+
+        <div className="flex items-center gap-3">
+          <span className="text-[11px] text-white/40">Note colour</span>
+          <input type="color" value={noteColorVal || "#ffffff"} onChange={(e) => setNoteColorVal(e.target.value)}
+            className="w-10 h-8 bg-transparent border border-white/20" />
+        </div>
+
+        <div className="space-y-2">
+          <span className="text-[11px] text-white/40 block">Note picture (optional)</span>
+          {noteImageUrlVal && (
+            <div className="flex items-center gap-3">
+              <img src={noteImageUrlVal} alt="Note" className="w-16 h-16 object-cover rounded" />
+              <button type="button" onClick={() => setNoteImageUrlVal("")} className="text-[11px] text-white/50 underline">Remove</button>
+            </div>
+          )}
+          <input type="file" accept="image/*" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleNoteImageUpload(f); }}
+            className="text-xs text-white/60" />
+          {noteImgUploading && <p className="text-[11px] text-white/40">Uploading…</p>}
+        </div>
+
+        <input type="url" value={noteMusicUrlVal} onChange={(e) => setNoteMusicUrlVal(e.target.value)} placeholder="Note sound link (YouTube / Spotify / SoundCloud)"
+          className="w-full bg-transparent border border-white/20 px-4 py-3 text-sm text-white focus:border-white/50 outline-none" />
+        <input type="text" value={noteMusicTitleVal} onChange={(e) => setNoteMusicTitleVal(e.target.value)} placeholder="Sound name shown in the note"
+          className="w-full bg-transparent border border-white/20 px-4 py-3 text-sm text-white focus:border-white/50 outline-none" />
       </div>
+
 
       <div>
         <label className="text-xs text-white/40 uppercase tracking-[0.2em] block mb-2">Tagline</label>
